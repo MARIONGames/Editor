@@ -69,10 +69,28 @@ npm test           # unit tests (Vitest)
 npm run build      # production build in dist/ (static files, host anywhere)
 npm run preview    # serve the production build
 npm run test:e2e   # end-to-end tests in Chromium (Playwright)
+npm run desktop    # run the desktop (Electron) app
 ```
 
 The production build is a static site with a service worker, so it works
 offline and can be installed to a phone's home screen ("Add to Home Screen").
+
+## Windows app
+
+Kinora also runs as a regular Windows program (Electron), fully offline.
+
+**Download:** open the repository's **Actions** tab → **Desktop app** → the latest
+green run → **Kinora-Windows** (or a GitHub Release, for tagged versions). It contains:
+
+- `Kinora-Setup-<version>.exe`: installer with Start-menu and desktop shortcuts.
+- `Kinora-<version>-portable.exe`: a single file that runs without installing.
+
+The app isn't code-signed yet, so Windows SmartScreen may say "Windows protected
+your PC": click **More info → Run anyway**.
+
+Build it yourself on Windows with `npm run desktop:dist` (output in `release/`),
+or try it on any OS with `npm run desktop`. The shell lives in `desktop/main.cjs`
+and the packaging settings in `electron-builder.yml`.
 
 ## Browser support
 
@@ -97,6 +115,7 @@ src/
   coach/     tour, checklist, next-step suggestions
   ui/        home screen, editor, timeline, panels, dialogs
   i18n/      every tool name/explanation and the glossary
+desktop/     Electron shell for the Windows/macOS/Linux app
 tests/       unit (Vitest) and end-to-end (Playwright) tests
 docs/        product, architecture and plan
 ```

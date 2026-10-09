@@ -1,0 +1,57 @@
+name: Desktop app
+
+# Builds Kinora for Windows on a real Windows machine:
+#   Kinora-Setup-<version>.exe     installer
+#   Kinora-<version>-portable.exe  single file, no install needed
+# Download them from the run's "Kinora-Windows" artifact. Pushing a tag like v0.2.0
+# also attaches them to a GitHub Release.
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Build the installer and portable exe
+        run: npm run desktop:dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Smoke test the packaged app
+        shell: pwsh
+        run: |
+          $report = Join-Path $PWD 'smoke.json'
+          $env:KINORA_SMOKE_TEST = $report
+          $app = Start-Process -FilePath 'release\win-unpacked\Kinora.exe' -PassThru
+          if (-not $app.WaitForExit(120000)) { Stop-Process -Id $app.Id -Force; throw 'Kinora did not finish the smoke test in time' }
+          Get-Content $report
+          if ($app.ExitCode -ne 0) { throw "Smoke test failed (exit code $($app.ExitCode))" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kinora-Windows
+          path: |
+            release/*.exe
+            smoke.json
+          if-no-files-found: error
+      - name: Attach to the GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release/*.exe --title "Kinora $GITHUB_REF_NAME" --generate-notes || gh release upload "$GITHUB_REF_NAME" release/*.exe --clobber

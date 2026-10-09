@@ -8,3 +8,5 @@ playwright-report/
 .DS_Store
 /tmp/
 dist-artifact/
+dist-desktop/
+release/

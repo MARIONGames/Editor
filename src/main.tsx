@@ -37,7 +37,8 @@ if (problem) {
   initRouter();
 }
 
-if (import.meta.env.PROD && import.meta.env.MODE !== 'artifact' && 'serviceWorker' in navigator && window.isSecureContext && window.top === window) {
+// Only the web build works offline through a service worker (the artifact and desktop builds don't use one).
+if (import.meta.env.MODE === 'production' && 'serviceWorker' in navigator && window.isSecureContext && window.top === window) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => undefined);
   });

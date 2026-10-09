@@ -1,0 +1,37 @@
+# Desktop packaging (npm run desktop:dist). Builds on Windows produce:
+#   release/Kinora-Setup-<version>.exe     installer (Start menu + desktop shortcut)
+#   release/Kinora-<version>-portable.exe  single file, runs without installing
+appId: app.kinora.editor
+productName: Kinora
+copyright: Copyright © Kinora
+directories:
+  output: release
+files:
+  - desktop/**
+  - dist-desktop/**
+  - package.json
+asar: true
+compression: maximum
+win:
+  icon: public/icon-512.png
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Kinora
+  artifactName: Kinora-Setup-${version}.${ext}
+portable:
+  artifactName: Kinora-${version}-portable.${ext}
+mac:
+  icon: public/icon-512.png
+  category: public.app-category.video
+linux:
+  icon: public/icon-512.png
+  category: AudioVideo

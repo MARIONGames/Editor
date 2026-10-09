@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "description": "Kinora — pro-quality photo & video editing that's ridiculously easy. Runs in the browser on phones and PCs.",
+  "author": "Kinora",
+  "homepage": "https://github.com/mariongames/editor",
   "license": "UNLICENSED",
   "type": "module",
+  "main": "desktop/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -15,17 +18,20 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"docs/**/*.md\" README.md",
-    "ci": "npm run check && npm test && npm run build"
-  },
-  "dependencies": {
-    "@preact/signals": "2.11.2",
-    "lucide-preact": "1.48.0",
-    "mediabunny": "1.59.1",
-    "preact": "10.29.8"
+    "ci": "npm run check && npm test && npm run build",
+    "build:desktop": "vite build --mode desktop",
+    "desktop": "vite build --mode desktop && electron .",
+    "desktop:dist": "vite build --mode desktop && electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
+    "@preact/signals": "2.11.2",
     "@types/node": "^22.20.5",
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3",
+    "lucide-preact": "1.48.0",
+    "mediabunny": "1.59.1",
+    "preact": "10.29.8",
     "prettier": "3.8.1",
     "typescript": "7.0.2",
     "vite": "8.3.1",
