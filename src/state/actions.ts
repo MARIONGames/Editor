@@ -227,7 +227,7 @@ export function openPanel(id: PanelId | null): void {
 export type ImportTarget = 'auto' | 'main' | 'overlay' | 'audio';
 
 /** Imports files (with progress) and puts them in the project. */
-export async function importFiles(files: File[], target: ImportTarget = 'auto'): Promise<ID[]> {
+export async function importFiles(files: File[], target: ImportTarget = 'auto', opts: { keepCanvas?: boolean } = {}): Promise<ID[]> {
   const p0 = project.peek();
   if (!p0 || !files.length) return [];
   const results: ImportResult[] = [];
@@ -268,7 +268,7 @@ export async function importFiles(files: File[], target: ImportTarget = 'auto'):
   }
   for (const e of errors) toast(e, 'error', undefined, 6000);
   if (!results.length) return [];
-  return placeImported(results.map((r) => r.asset), target);
+  return placeImported(results.map((r) => r.asset), target, !!opts.keepCanvas);
 }
 
 /** When set, the first photo/video added to an empty video project decides its shape. */
@@ -285,7 +285,7 @@ export function canvasForMedia(w: number, h: number): { width: number; height: n
   return { width: even(w), height: even(h) };
 }
 
-function placeImported(assets: Asset[], target: ImportTarget): ID[] {
+function placeImported(assets: Asset[], target: ImportTarget, keepCanvas = false): ID[] {
   const ids: ID[] = [];
   const label = assets.length > 1 ? `Add ${assets.length} items` : `Add ${assets[0]!.kind === 'audio' ? 'sound' : assets[0]!.kind}`;
   commit(label, (p) => {
@@ -306,7 +306,7 @@ function placeImported(assets: Asset[], target: ImportTarget): ID[] {
           fit: 'contain',
           transform: { x: 0.5, y: 0.5, scale: isFirst ? 1 : 0.6, rotation: 0, flipX: false, flipY: false },
         });
-        if (isFirst) {
+        if (isFirst && !keepCanvas) {
           // The first photo defines the canvas: full resolution, no borders.
           q = { ...q, width: a.width, height: a.height, name: q.name === 'My photo' ? stripExt(a.name) : q.name };
         }

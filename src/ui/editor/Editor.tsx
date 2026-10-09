@@ -3,17 +3,19 @@ import { isCompact, panel, project } from '../../state/store';
 import { PanelHost } from '../panels/PanelHost';
 import { Stage } from './Stage';
 import { Timeline } from './Timeline';
-import { ToolDock } from './ToolDock';
+import { SelectionBar, ToolDock } from './ToolDock';
 import { TopBar } from './TopBar';
 import { Transport } from './Transport';
 import { useEditorShortcuts } from './shortcuts';
 import { useDropImport } from './dropImport';
+import { NextStepChip, useAutoTour } from '../../coach/NextSteps';
 
 export function Editor() {
   const p = project.value;
   const compact = isCompact.value;
   const open = panel.value !== null;
   useEditorShortcuts();
+  useAutoTour();
   const dropping = useDropImport();
   useEffect(() => {
     document.body.classList.add('in-editor');
@@ -28,8 +30,10 @@ export function Editor() {
         {!compact && <ToolDock vertical />}
         <div class="editor-center">
           <Stage />
+          {!compact && <SelectionBar />}
           {isVideo && <Transport />}
           {isVideo && <Timeline />}
+          {compact && <NextStepChip />}
           {compact && <ToolDock />}
         </div>
         {!compact && <PanelHost />}

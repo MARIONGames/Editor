@@ -11,6 +11,7 @@ import {
   playhead,
   playing,
   project,
+  selectionId,
 } from '../state/store';
 import { AudioEngine } from './audio/audioEngine';
 import { loadAudio, onAudioDecoded, warmStretch } from './audio/library';
@@ -98,6 +99,7 @@ class Preview {
       void compareOriginal.value;
       void fontsVersion.value;
       void editingTextId.value;
+      void selectionId.value;
       void playhead.value;
       void playing.value;
       this.requestRender();
@@ -172,7 +174,8 @@ class Preview {
         this.renderer.render(p, p.kind === 'photo' ? 0 : rt, this.provider, {
           original: compareOriginal.peek(),
           checker: p.background.color === 'transparent',
-          hide: editingTextId.peek() ? new Set([editingTextId.peek()!]) : undefined,
+          // While paused, show the selected item fully (not mid-animation) so you can see what you edit.
+          staticClipId: playing.peek() ? null : selectionId.peek(),
         });
       } catch (err) {
         console.error('Render failed', err);

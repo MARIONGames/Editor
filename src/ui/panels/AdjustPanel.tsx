@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { RotateCcw, Sparkles, CopyCheck } from 'lucide-preact';
 import { ADJUST_KEYS } from '../../model/defaults';
 import { mainTrack, resetAdjust, setAdjust } from '../../model/ops';
-import type { AdjustKey, Clip } from '../../model/types';
+import type { AdjustKey, Clip, MediaClip } from '../../model/types';
 import { ADJUST_GROUPS, ADJUST_TEXT } from '../../i18n/tools';
 import { commit, endGesture } from '../../state/actions';
 import { emit } from '../../state/events';
@@ -14,7 +14,7 @@ import { NeedSelection } from './PanelHost';
 const POSITIVE_ONLY = new Set<AdjustKey>(['sharpen', 'blur', 'grain', 'fade']);
 const BASIC = new Set<AdjustKey>(['exposure', 'contrast', 'highlights', 'shadows', 'temperature', 'saturation', 'vibrance', 'sharpen', 'vignette']);
 
-export function useMediaSelection(): Clip | null {
+export function useMediaSelection(): MediaClip | null {
   const c = selectedClip.value;
   const p = project.value;
   if (!c || !p || c.type !== 'media') return null;

@@ -2,6 +2,8 @@ import { signal } from '@preact/signals';
 import { useRef } from 'preact/hooks';
 import { Check } from 'lucide-preact';
 import { select } from '../../state/actions';
+import { formatDuration } from '../../model/time';
+import type { Clip, Project } from '../../model/types';
 import { isCompact, project, selectedClip, settings } from '../../state/store';
 import { clipTools, rootTools, type ToolDef } from './tools';
 
@@ -116,16 +118,43 @@ export function ToolDock({ vertical }: { vertical?: boolean }) {
   );
 }
 
-/** Desktop: the selected clip's tools in a bar under the picture. */
-export function ClipBar() {
+/** Desktop: a row under the picture with the selected item's tools (or a hint). */
+export function SelectionBar() {
   const p = project.value!;
   const clip = selectedClip.value;
-  if (!clip) return null;
+  if (!clip) {
+    return (
+      <div class="selbar empty">
+        <span class="faint">
+          {p.kind === 'video'
+            ? 'Tip: tap a clip in the timeline (or anything on the picture) to cut, adjust or move it.'
+            : 'Tip: tap anything on the picture to change it. Drag to move, pull a corner to resize.'}
+        </span>
+      </div>
+    );
+  }
   return (
-    <div class="clipbar scroll-x" aria-label="Tools for the selected item">
-      {clipTools(p, clip).map((t) => (
-        <ToolButton key={t.id} tool={t} />
-      ))}
+    <div class="selbar">
+      <span class="selbar-label">
+        <span class="sel-dot" /> {describe(p, clip)}
+      </span>
+      <div class="selbar-tools scroll-x" aria-label="Tools for the selected item">
+        {clipTools(p, clip).map((t) => (
+          <ToolButton key={t.id} tool={t} />
+        ))}
+      </div>
+      <button class="btn small ghost" onClick={() => select(null)}>
+        Done
+      </button>
     </div>
   );
+}
+
+function describe(p: Project, c: Clip): string {
+  if (c.type === 'text') return 'Text';
+  if (c.type === 'sticker') return `Sticker ${c.emoji}`;
+  if (c.type === 'shape') return 'Shape';
+  const a = p.assets[c.assetId];
+  const kind = a?.kind === 'audio' ? 'Sound' : a?.kind === 'image' ? 'Photo' : 'Video clip';
+  return p.kind === 'video' ? `${kind} · ${formatDuration(c.duration)}` : kind;
 }

@@ -43,11 +43,14 @@ export class AudioEngine {
       getBuffer: (id) => peekAudio(id),
       allowStretch: true,
     });
-    let perfAtWhen = performance.now() + lead * 1000;
+    const now = performance.now();
+    let perfAtWhen = now + lead * 1000;
     try {
       const ts = ctx.getOutputTimestamp?.();
       if (ts && ts.contextTime !== undefined && ts.performanceTime !== undefined && ts.performanceTime > 0) {
-        perfAtWhen = ts.performanceTime + (when - ts.contextTime) * 1000;
+        const est = ts.performanceTime + (when - ts.contextTime) * 1000;
+        // Only trust it when it is plausible (some devices report stale or bogus timestamps).
+        if (est >= now - 50 && est <= now + 500) perfAtWhen = est;
       }
     } catch {
       /* keep estimate */

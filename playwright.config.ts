@@ -12,7 +12,11 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4173',
     trace: 'retain-on-failure',
-    launchOptions: executablePath ? { executablePath } : {},
+    launchOptions: {
+      ...(executablePath ? { executablePath } : {}),
+      // Software WebGL in CI containers without a GPU.
+      args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'],
+    },
   },
   webServer: {
     command: 'npm run build && npm run preview -- --port 4173 --strictPort',

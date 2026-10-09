@@ -33,11 +33,17 @@ export function croppedSourceSize(asset: Pick<Asset, 'width' | 'height'>, crop: 
 /** Size of a media clip before its own scale: fitted (contain) or filling (cover) the canvas. */
 export function mediaBaseSize(clip: MediaClip, asset: Asset, canvasW: number, canvasH: number): Size {
   const src = croppedSourceSize(asset, clip.crop);
-  const s =
-    clip.fit === 'cover'
-      ? Math.max(canvasW / src.w, canvasH / src.h)
-      : Math.min(canvasW / src.w, canvasH / src.h);
+  // A quarter-turned picture fits the canvas with its sides swapped.
+  const odd = (((clip.turns ?? 0) % 2) + 2) % 2 === 1;
+  const W = odd ? canvasH : canvasW;
+  const H = odd ? canvasW : canvasH;
+  const s = clip.fit === 'cover' ? Math.max(W / src.w, H / src.h) : Math.min(W / src.w, H / src.h);
   return { w: src.w * s, h: src.h * s };
+}
+
+/** Total rotation of a clip in degrees (quarter turns + free rotation). */
+export function clipRotation(clip: Clip): number {
+  return clip.transform.rotation + (clip.type === 'media' ? (clip.turns ?? 0) * 90 : 0);
 }
 
 /** Base size for non-media clips that don't depend on text measuring. */
@@ -51,11 +57,11 @@ export function simpleBaseSize(clip: Clip): Size | null {
  * Where a clip is drawn at time t: transform + Ken Burns motion + animation.
  * `base` is the clip's size before its own scale.
  */
-export function clipQuad(project: Project, clip: Clip, base: Size, t: number): Quad {
+export function clipQuad(project: Project, clip: Clip, base: Size, t: number, animate = true): Quad {
   const W = project.width;
   const H = project.height;
   const local = Math.max(0, t - clip.start);
-  const a = project.kind === 'photo' ? null : animState(clip.animation, local, clip.duration);
+  const a = project.kind === 'photo' || !animate ? null : animState(clip.animation, local, clip.duration);
   const tr = clip.transform;
   let w = base.w * tr.scale;
   let h = base.h * tr.scale;
@@ -82,7 +88,7 @@ export function clipQuad(project: Project, clip: Clip, base: Size, t: number): Q
     cy,
     w,
     h,
-    rotation: ((tr.rotation + (a ? a.rotate : 0)) * Math.PI) / 180,
+    rotation: ((clipRotation(clip) + (a ? a.rotate : 0)) * Math.PI) / 180,
     flipX: tr.flipX,
     flipY: tr.flipY,
     opacity: clip.opacity * (a ? a.opacity : 1),

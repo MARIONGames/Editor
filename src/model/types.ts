@@ -246,6 +246,8 @@ export interface MediaClip extends ClipCommon {
   /** Keep voices natural when speed != 1. */
   keepPitch: boolean;
   crop: Crop;
+  /** Quarter turns (0–3) applied before the free rotation (Crop → Rotate). */
+  turns: number;
   /** How the media fills the canvas before `transform.scale`. */
   fit: 'contain' | 'cover';
   motion: Motion;

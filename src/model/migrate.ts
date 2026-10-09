@@ -75,6 +75,7 @@ function fixClip(c: Clip): Clip {
         fadeOut: c.fadeOut ?? 0,
         keepPitch: c.keepPitch ?? true,
         crop: { ...defaultCrop(), ...c.crop },
+        turns: c.turns ?? 0,
         fit: c.fit ?? 'contain',
         motion: c.motion ?? 'none',
       } as Clip;

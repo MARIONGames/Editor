@@ -26,7 +26,7 @@ import {
   Palette,
   Pipette,
 } from 'lucide-preact';
-import type { FunctionComponent } from 'preact';
+import type { LucideIcon } from 'lucide-preact';
 import { findClip } from '../../model/ops';
 import type { Clip, Project } from '../../model/types';
 import { TOOL_TEXT, type ToolText } from '../../i18n/tools';
@@ -45,7 +45,7 @@ import { ACCEPT_AUDIO, ACCEPT_IMAGE, ACCEPT_VISUAL, pickFiles } from '../compone
 export interface ToolDef {
   id: string;
   text: ToolText;
-  icon: FunctionComponent<{ size?: number }>;
+  icon: LucideIcon;
   run: () => void;
   active?: boolean;
   danger?: boolean;

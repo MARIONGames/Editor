@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { ImagePlus, Plus } from 'lucide-preact';
-import { quadContains, quadCorners, type Point } from '../../model/geometry';
+import { clipRotation, quadContains, quadCorners, type Point } from '../../model/geometry';
 import { clipsAt, findClip, mainTrack, setTransform } from '../../model/ops';
 import type { Clip, Project, Transform } from '../../model/types';
 import { Renderer } from '../../engine/render/renderer';
@@ -30,7 +30,7 @@ export function staticQuad(p: Project, clip: Clip) {
     cy: t.y * p.height,
     w: base.w * t.scale,
     h: base.h * t.scale,
-    rotation: (t.rotation * Math.PI) / 180,
+    rotation: (clipRotation(clip) * Math.PI) / 180,
   };
 }
 

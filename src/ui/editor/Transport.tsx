@@ -3,7 +3,6 @@ import { formatTime } from '../../model/time';
 import { preview } from '../../engine/preview';
 import { compareOriginal, duration, isCompact, playhead, playing, zoom } from '../../state/store';
 import { emit } from '../../state/events';
-import { ClipBar } from './ToolDock';
 
 export function clampZoom(z: number): number {
   return Math.max(8, Math.min(1200, z));
@@ -31,7 +30,6 @@ export function Transport() {
         <span class="time-sep">/</span>
         <span class="time-total">{formatTime(duration.value)}</span>
       </div>
-      {!compact && <ClipBar />}
       <div class="transport-right">
         <button
           class={`icon-btn small ${compareOriginal.value ? 'active' : ''}`}

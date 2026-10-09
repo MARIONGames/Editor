@@ -179,6 +179,7 @@ export function createMediaClip(asset: Asset, opts: Partial<MediaClip> = {}): Me
     fadeOut: 0,
     keepPitch: true,
     crop: defaultCrop(),
+    turns: 0,
     fit: 'contain',
     motion: 'none',
     ...opts,

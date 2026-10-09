@@ -18,7 +18,7 @@ export interface ScheduleOptions {
 }
 
 /** Master chain: gain → gentle limiter (prevents clipping when music + voice stack up). */
-export function createMasterChain(ctx: BaseAudioContext): { input: GainNode; output: AudioNode } {
+export function createMasterChain(ctx: BaseAudioContext, destination: AudioNode = ctx.destination): { input: GainNode; output: AudioNode } {
   const input = ctx.createGain();
   const limiter = ctx.createDynamicsCompressor();
   limiter.threshold.value = -1.5;
@@ -27,7 +27,7 @@ export function createMasterChain(ctx: BaseAudioContext): { input: GainNode; out
   limiter.attack.value = 0.003;
   limiter.release.value = 0.2;
   input.connect(limiter);
-  limiter.connect(ctx.destination);
+  limiter.connect(destination);
   return { input, output: limiter };
 }
 

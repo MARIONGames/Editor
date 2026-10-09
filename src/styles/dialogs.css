@@ -1,0 +1,380 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(5, 5, 10, 0.6);
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.15s;
+}
+
+.dialog {
+  width: min(520px, 100%);
+  max-height: min(86vh, 860px);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-xl);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  animation: pop-in 0.2s var(--ease);
+}
+
+.dialog.wide {
+  width: min(760px, 100%);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px 16px 8px 22px;
+}
+
+.dialog-head h2 {
+  font-size: 21px;
+}
+
+.dialog-sub {
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.dialog-body {
+  padding: 10px 22px 20px;
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+}
+
+.dialog-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 600px) {
+  .dialog-backdrop {
+    place-items: end stretch;
+    padding: 0;
+  }
+  .dialog,
+  .dialog.wide {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 22px 22px 0 0;
+    animation: sheet-up 0.25s var(--ease);
+  }
+}
+
+/* Toasts */
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + var(--safe-bottom));
+  transform: translateX(-50%);
+  z-index: 95;
+  display: grid;
+  gap: 8px;
+  width: min(480px, calc(100% - 24px));
+  pointer-events: none;
+}
+
+.in-editor .toasts {
+  bottom: auto;
+  top: calc(64px + var(--safe-top));
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 14px;
+  background: #23242e;
+  color: #f3f3f8;
+  border: 1px solid #3c3f52;
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  animation: rise-in 0.25s var(--ease);
+}
+
+.toast.success svg:first-child {
+  color: var(--success);
+}
+
+.toast.error {
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.toast.error svg:first-child {
+  color: var(--danger);
+}
+
+.toast .icon-btn {
+  color: inherit;
+}
+
+/* Busy */
+.busy-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 5, 10, 0.55);
+  backdrop-filter: blur(3px);
+  animation: fade-in 0.2s;
+}
+
+.busy-card {
+  width: min(360px, calc(100% - 32px));
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 26px 22px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.busy-msg {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 4px solid var(--surface-3);
+  border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner.big {
+  width: 54px;
+  height: 54px;
+  border-width: 5px;
+}
+
+.progress {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.progress.big {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gradient);
+  border-radius: inherit;
+  transition: width 0.25s;
+}
+
+/* Export */
+.export-presets {
+  display: grid;
+  gap: 10px;
+}
+
+.export-preset {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.export-preset.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.export-preset strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.export-preset span span,
+.export-preset .grow > span {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.export-more {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.export-working {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 16px 0 6px;
+  text-align: center;
+}
+
+.export-done {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.export-preview {
+  max-width: 100%;
+  max-height: 46vh;
+  border-radius: 12px;
+  background: #000;
+  box-shadow: var(--shadow-s);
+}
+
+/* Glossary */
+.glossary {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.glossary-item {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.glossary dt {
+  font-weight: 800;
+  font-size: 15.5px;
+}
+
+.glossary dd {
+  margin: 4px 0 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.shortcuts {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.shortcuts td {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.shortcuts td:first-child {
+  white-space: nowrap;
+  width: 45%;
+}
+
+/* Templates */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+}
+
+.template-card {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  text-align: left;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+
+.template-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.template-emoji {
+  font-size: 34px;
+  line-height: 1;
+}
+
+/* Coach */
+.coach-hole {
+  position: fixed;
+  z-index: 85;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 0 0 9999px rgba(5, 5, 12, 0.55);
+  pointer-events: none;
+  transition: all 0.25s var(--ease);
+}
+
+.coach-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  background: rgba(5, 5, 12, 0.55);
+  pointer-events: none;
+}
+
+.coach-card {
+  position: fixed;
+  z-index: 86;
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px 14px;
+  border-radius: 18px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+  animation: pop-in 0.25s var(--ease);
+}
+
+.coach-card h3 {
+  font-size: 17px;
+}
+
+.coach-card p {
+  font-size: 14.5px;
+  color: var(--text-dim);
+}
+
+.coach-step {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.coach-actions {
+  justify-content: flex-end;
+  margin-top: 4px;
+}

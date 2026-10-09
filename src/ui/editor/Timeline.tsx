@@ -377,7 +377,7 @@ export function Timeline() {
     else if (clientX > r.right - edge) el.scrollLeft += 14;
   };
 
-  const onPointerUp = (e: PointerEvent) => {
+  const onPointerUp = (_e: PointerEvent) => {
     const d = drag.current;
     drag.current = null;
     setSnapLine(null);

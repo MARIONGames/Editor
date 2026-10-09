@@ -56,6 +56,8 @@ export interface RenderOptions {
   hide?: Set<string>;
   /** Override effects of one clip (filter previews). */
   overrideEffects?: { clipId: string; effects: Clip['effects'] };
+  /** Draw this clip without its entrance/exit/loop animation (it is being edited). */
+  staticClipId?: string | null;
 }
 
 interface TexEntry {
@@ -310,7 +312,7 @@ export class Renderer {
   ): void {
     const base = clipBaseSize(p, clip);
     if (base.w <= 0 || base.h <= 0) return;
-    const q = clipQuad(p, clip, base, t);
+    const q = clipQuad(p, clip, base, t, clip.id !== opts.staticClipId);
     if (q.opacity <= 0.002 || q.w < 0.25 || q.h < 0.25) return;
 
     let tex: TexEntry | null = null;
@@ -329,7 +331,8 @@ export class Renderer {
       tex.lastUsed = this.frameNo;
       uv = [clip.crop.left, clip.crop.top, 1 - clip.crop.right, 1 - clip.crop.bottom];
       if (onMain && p.background.blur && p.kind === 'video' && !this.covers(q, p)) {
-        this.drawBlurFill(p, clip, tex, uv, target, k, q.opacity);
+        const fx = opts.original ? null : clip.effects;
+        this.drawBlurFill(p, clip, tex, uv, target, k, q.opacity, fx);
       }
     } else {
       const scaleBucket = bucket(k * clip.transform.scale);
@@ -404,6 +407,7 @@ export class Renderer {
     target: RenderTarget,
     k: number,
     opacity: number,
+    effects: Clip['effects'] | null,
   ): void {
     const W = p.width * k;
     const H = p.height * k;
@@ -412,7 +416,18 @@ export class Renderer {
     const cover = Math.max(W / srcW, H / srcH) * 1.06;
     const sw = Math.max(8, Math.round(Math.min(160, srcW)));
     const sh = Math.max(8, Math.round((sw * srcH) / srcW));
-    const small = this.prepare(tex.tex, uv, false, sw, sh);
+    let small = this.prepare(tex.tex, uv, false, sw, sh);
+    // The backdrop gets the clip's colour look too (but no keying/blur/grain).
+    if (effects) {
+      const look = { ...effects, chromaKey: null, adjust: { ...effects.adjust, blur: 0, grain: 0, sharpen: 0, clarity: 0 } };
+      if (!isNeutral(look)) {
+        const dev = this.develop(small, look, 0, 0);
+        if (dev !== small) {
+          this.pool.release(small);
+          small = dev;
+        }
+      }
+    }
     const blurred = this.blur(small, Math.max(sw, sh) * 0.045);
     this.composite(
       target,
