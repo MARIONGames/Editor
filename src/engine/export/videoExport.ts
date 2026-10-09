@@ -33,6 +33,27 @@ export interface ExportResult {
 
 export type ProgressFn = (fraction: number, message: string) => void;
 
+/**
+ * Gives the page a turn (taps on Cancel, painting the progress bar). Encoder promises often
+ * resolve as microtasks, so without this a run of still frames never lets the page respond.
+ * Unlike setTimeout, neither path is throttled when the tab is in the background.
+ */
+const yieldToPage: () => Promise<void> = (() => {
+  const scheduler = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+  if (typeof scheduler?.yield === 'function') return () => scheduler.yield!();
+  const waiting: (() => void)[] = [];
+  let channel: MessageChannel | null = null;
+  return () =>
+    new Promise<void>((resolve) => {
+      if (!channel) {
+        channel = new MessageChannel();
+        channel.port1.onmessage = () => waiting.shift()?.();
+      }
+      waiting.push(resolve);
+      channel.port2.postMessage(0);
+    });
+})();
+
 export class ExportCancelled extends Error {
   constructor() {
     super('Export cancelled');
@@ -87,7 +108,9 @@ async function makeTarget(mb: typeof import('mediabunny'), ext: string): Promise
 
 export async function exportVideo(p: Project, o: VideoExportOptions, onProgress: ProgressFn, signal: AbortSignal): Promise<ExportResult> {
   if (!canUseWebCodecs()) return recordRealtime(p, o, onProgress, signal);
-  const mb = await import('mediabunny');
+  // If the encoder library can't be loaded (say, a blocked download), record in real time instead.
+  const mb = await import('mediabunny').catch(() => null);
+  if (!mb) return recordRealtime(p, o, onProgress, signal);
   const duration = projectDuration(p);
   if (duration <= 0) throw new Error('Your project is empty — add something first.');
   const fps = o.fps;
@@ -162,7 +185,12 @@ export async function exportVideo(p: Project, o: VideoExportOptions, onProgress:
     let audioSent = 0;
 
     const started = performance.now();
+    let lastYield = started;
     for (let i = 0; i < frames; i++) {
+      if (performance.now() - lastYield > 30) {
+        await yieldToPage();
+        lastYield = performance.now();
+      }
       if (signal.aborted) abort();
       while (audioSource && audioSent < audioChunks.length && audioSent <= i / fps + 1) {
         await audioSource.add(audioChunks[audioSent]!);

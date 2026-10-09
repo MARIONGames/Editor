@@ -114,13 +114,13 @@ interface VideoInfo {
 }
 
 async function importVideo(file: File, onProgress?: (p: number) => void): Promise<ImportResult> {
-  const mb = await import('mediabunny');
   let info: VideoInfo | null = null;
   let thumbs: Blob[] = [];
   let interval = 1;
   let audio: { peaks: Float32Array; rms: Float32Array } | undefined;
-  let input: InstanceType<typeof mb.Input> | null = null;
+  let input: import('mediabunny').Input | null = null;
   try {
+    const mb = await import('mediabunny');
     input = new mb.Input({ formats: mb.ALL_FORMATS, source: new mb.BlobSource(file) });
     const vt = await input.getPrimaryVideoTrack();
     if (vt) {
@@ -260,11 +260,11 @@ async function elementFilmstrip(video: HTMLVideoElement, info: VideoInfo, interv
 /* ------------------------------------------------------------------- audio */
 
 async function importAudio(file: File, onProgress?: (p: number) => void): Promise<ImportResult> {
-  const mb = await import('mediabunny');
   let duration = 0;
   let audio: { peaks: Float32Array; rms: Float32Array } | undefined;
-  let input: InstanceType<typeof mb.Input> | null = null;
+  let input: import('mediabunny').Input | null = null;
   try {
+    const mb = await import('mediabunny');
     input = new mb.Input({ formats: mb.ALL_FORMATS, source: new mb.BlobSource(file) });
     const at = await input.getPrimaryAudioTrack();
     if (at) {

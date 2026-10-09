@@ -6,7 +6,7 @@ import type { TextClip, TextStyle } from '../../model/types';
 import { addText, endGesture, updateClipById } from '../../state/actions';
 import { emit } from '../../state/events';
 import { editingTextId, project, selectedClip } from '../../state/store';
-import { ColorSwatches, Section, Segmented, Switch } from '../components/Controls';
+import { ColorSwatches, Section, Segmented } from '../components/Controls';
 import { Slider } from '../components/Slider';
 
 /** CSS approximation of a text style for the preset picker. */
@@ -191,9 +191,7 @@ export function TextPanel() {
         <Slider label="Letters" value={Math.round(st.letterSpacing * 100)} min={-10} max={60} defaultValue={0} onChange={(v, f) => { setStyle({ letterSpacing: v / 100 }, 'Letter spacing', 'ls'); fin(f); }} />
         <Slider label="Lines" value={Math.round(st.lineHeight * 100)} min={70} max={250} defaultValue={115} format={(v) => (v / 100).toFixed(2)} onChange={(v, f) => { setStyle({ lineHeight: v / 100 }, 'Line spacing', 'lh'); fin(f); }} />
       </Section>
-      <Section>
-        <Switch label="Show hints while editing" checked={true} onChange={() => undefined} hint="Tip: double-tap text on the picture to edit it." />
-      </Section>
+      <p class="faint">Tip: double-tap text on the picture to edit it.</p>
     </div>
   );
 }

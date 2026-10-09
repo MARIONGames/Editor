@@ -24,7 +24,7 @@ export function hostDownloads(): Promise<HostDownloads | null> {
   return downloads;
 }
 
-export type SaveOutcome = 'saved' | 'declined' | 'unavailable';
+export type SaveOutcome = 'saved' | 'declined' | 'busy' | 'too-large' | 'unavailable';
 
 /** Saves a file: through the host when it offers saving, otherwise as a browser download. */
 export async function saveFile(blob: Blob, name: string): Promise<SaveOutcome> {
@@ -36,10 +36,13 @@ export async function saveFile(blob: Blob, name: string): Promise<SaveOutcome> {
     } catch (err) {
       const code = (err as { code?: string })?.code;
       if (code === 'declined') return 'declined';
-      if (code !== 'unavailable' && code !== 'not_granted') return 'unavailable';
+      if (code === 'rate_limited') return 'busy';
+      if (code === 'too_large') return 'too-large';
+      return 'unavailable';
     }
   }
-  if (inHostFrame) return 'unavailable';
+  // A host frame without the capability also blocks downloads the page starts itself.
+  if (inHostFrame && window.top !== window) return 'unavailable';
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

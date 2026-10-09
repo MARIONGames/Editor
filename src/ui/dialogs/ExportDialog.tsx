@@ -47,6 +47,8 @@ async function download(blob: Blob, name: string): Promise<void> {
   const outcome = await saveFile(blob, name);
   if (outcome === 'saved') toast(`Saved “${name}”`, 'success');
   else if (outcome === 'declined') toast('Not saved.');
+  else if (outcome === 'busy') toast('Finish the save window that’s already open, then try again.');
+  else if (outcome === 'too-large') toast('This file is too big to save here. Try “Small file” in the export settings.', 'error', undefined, 6000);
   else toast('Saving files isn’t available here. Open Kinora in its own browser tab to save.', 'error', undefined, 6000);
 }
 

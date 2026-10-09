@@ -1,31 +1,24 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig } from 'vite';
+import { artifactPlugins } from './build/artifact-plugin.ts';
 import { pwaPlugin } from './build/pwa-plugin.ts';
 
-/** The artifact page links the same families from Google Fonts, so the bundled faces are left out. */
-function noBundledFonts(): Plugin {
-  return {
-    name: 'kinora:no-bundled-fonts',
-    enforce: 'pre',
-    load(id) {
-      if (id.split('?')[0]!.endsWith('/src/styles/fonts.css')) return '/* fonts load from Google Fonts */';
-      return null;
-    },
-  };
-}
-
 export default defineConfig(({ mode }) => {
-  // `vite build --mode artifact` makes a self-contained demo for a sandboxed host page:
+  // `vite build --mode artifact` makes a demo for a sandboxed host page (see build/artifact-plugin.ts):
   // no service worker, fonts from Google Fonts, no source maps.
   const artifact = mode === 'artifact';
   return {
     // Relative base so the static build works from any sub-path (GitHub Pages, file hosting).
     base: './',
+    publicDir: artifact ? false : 'public',
     oxc: {
       jsx: { runtime: 'automatic', importSource: 'preact' },
     },
     build: {
       target: 'es2022',
       sourcemap: !artifact,
+      // The demo ships readable JavaScript so anyone can inspect what runs; gzip keeps it small.
+      minify: !artifact,
+      cssMinify: true,
       outDir: artifact ? 'dist-artifact' : 'dist',
       chunkSizeWarningLimit: 900,
     },
@@ -33,7 +26,7 @@ export default defineConfig(({ mode }) => {
       host: true,
     },
     plugins: artifact
-      ? [noBundledFonts()]
+      ? artifactPlugins()
       : [pwaPlugin(['manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable.png'])],
   };
 });

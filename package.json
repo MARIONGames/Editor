@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:artifact": "vite build --mode artifact",
     "preview": "vite preview",
     "check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run",
