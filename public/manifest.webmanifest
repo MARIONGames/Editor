@@ -1,0 +1,18 @@
+{
+  "name": "Kinora — Photo & Video Editor",
+  "short_name": "Kinora",
+  "description": "Pro-quality photo & video editing. Ridiculously easy. Works offline, everything stays on your device.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0e0f13",
+  "theme_color": "#0e0f13",
+  "categories": ["photo", "video", "productivity"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

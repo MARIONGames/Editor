@@ -1,0 +1,36 @@
+{
+  "name": "kinora",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kinora — pro-quality photo & video editing that's ridiculously easy. Runs in the browser on phones and PCs.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\" \"docs/**/*.md\" README.md",
+    "ci": "npm run check && npm test && npm run build"
+  },
+  "dependencies": {
+    "@preact/signals": "2.11.2",
+    "lucide-preact": "1.48.0",
+    "mediabunny": "1.59.1",
+    "preact": "10.29.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "^22.20.5",
+    "prettier": "3.8.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.1",
+    "vitest": "5.0.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

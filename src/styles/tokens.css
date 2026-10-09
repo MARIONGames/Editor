@@ -1,0 +1,114 @@
+/* Kinora design tokens. Dark is the default (media looks best on dark); light is available. */
+:root {
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --bg: #0e0f13;
+  --bg-elev: #14151b;
+  --surface: #1a1b23;
+  --surface-2: #22232d;
+  --surface-3: #2b2d39;
+  --surface-hover: #2f3140;
+  --border: #2c2e3b;
+  --border-strong: #3c3f52;
+  --stage-bg: #08080b;
+
+  --text: #f3f3f8;
+  --text-dim: #a9acc0;
+  --text-faint: #71748a;
+
+  --accent: #7c5cff;
+  --accent-hover: #8d71ff;
+  --accent-2: #b84df1;
+  --accent-3: #ff6a88;
+  --accent-soft: rgba(124, 92, 255, 0.18);
+  --accent-text: #ffffff;
+  --gradient: linear-gradient(135deg, #6d5bff 0%, #b84df1 55%, #ff6a88 100%);
+  --gradient-soft: linear-gradient(135deg, rgba(109, 91, 255, 0.22), rgba(255, 106, 136, 0.18));
+
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --focus: #a594ff;
+
+  --clip-video: #3b82f6;
+  --clip-photo: #8b5cf6;
+  --clip-text: #f59e0b;
+  --clip-sticker: #ec4899;
+  --clip-shape: #14b8a6;
+  --clip-audio: #10b981;
+  --selection: #ffd23f;
+
+  --radius-s: 8px;
+  --radius: 12px;
+  --radius-l: 18px;
+  --radius-xl: 26px;
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  --shadow-s: 0 3px 12px rgba(0, 0, 0, 0.3);
+  --tap: 44px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f4f8;
+  --bg-elev: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f0f0f6;
+  --surface-3: #e5e5ef;
+  --surface-hover: #e9e9f3;
+  --border: #e0e0ea;
+  --border-strong: #c9c9d8;
+  --stage-bg: #dcdce6;
+  --text: #15151d;
+  --text-dim: #565a70;
+  --text-faint: #8a8da3;
+  --accent: #6b4dff;
+  --accent-hover: #5a3cf0;
+  --accent-soft: rgba(107, 77, 255, 0.12);
+  --shadow: 0 10px 34px rgba(30, 30, 60, 0.16);
+  --shadow-s: 0 3px 12px rgba(30, 30, 60, 0.12);
+  --focus: #6b4dff;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']):not([data-theme='light']) {
+    --bg: #f4f4f8;
+    --bg-elev: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f0f0f6;
+    --surface-3: #e5e5ef;
+    --surface-hover: #e9e9f3;
+    --border: #e0e0ea;
+    --border-strong: #c9c9d8;
+    --stage-bg: #dcdce6;
+    --text: #15151d;
+    --text-dim: #565a70;
+    --text-faint: #8a8da3;
+    --accent: #6b4dff;
+    --accent-hover: #5a3cf0;
+    --accent-soft: rgba(107, 77, 255, 0.12);
+    --shadow: 0 10px 34px rgba(30, 30, 60, 0.16);
+    --shadow-s: 0 3px 12px rgba(30, 30, 60, 0.12);
+    --focus: #6b4dff;
+    color-scheme: light;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ease: linear;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
