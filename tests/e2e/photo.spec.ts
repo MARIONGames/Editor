@@ -19,7 +19,7 @@ test('edit a photo: auto-enhance, add text, export full-resolution PNG', async (
   await page.locator('[data-coach="export"]').click();
   await page.getByRole('radio', { name: 'PNG' }).click();
   await page.getByRole('button', { name: /Create photo/ }).click();
-  await expect(page.locator('.export-done')).toBeVisible({ timeout: 60_000 });
+  await expect(page.locator('.export-done')).toBeVisible({ timeout: 120_000 });
   const out = await exportedFile(page);
   expect(out.type).toBe('image/png');
   expect(out.width).toBe(1200);

@@ -7,6 +7,8 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
+  // CI runners have two cores and render WebGL in software: run one test at a time there.
+  workers: process.env.CI ? 1 : undefined,
   retries: 0,
   reporter: [['list']],
   use: {
@@ -21,7 +23,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run build && npm run preview -- --port 4173 --strictPort',
     port: 4173,
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
   projects: [
