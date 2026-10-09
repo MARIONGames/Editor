@@ -1,8 +1,8 @@
 import type { ID, Project } from '../model/types';
 
-export interface HistoryEntry {
-  project: Project;
-  selection: ID | null;
+export interface HistoryEntry<P = Project, S = ID | null> {
+  project: P;
+  selection: S;
   label: string;
 }
 
@@ -12,16 +12,17 @@ const COALESCE_MS = 1200;
 
 /**
  * Undo/redo stack of immutable project snapshots. Because projects share structure,
- * keeping hundreds of snapshots costs very little memory.
+ * keeping hundreds of snapshots costs very little memory. Used by the 2D editor
+ * (Project + selected clip) and the 3D studio (Scene3D + its selection state).
  */
-export class History {
-  past: HistoryEntry[] = [];
-  future: HistoryEntry[] = [];
+export class History<P = Project, S = ID | null> {
+  past: HistoryEntry<P, S>[] = [];
+  future: HistoryEntry<P, S>[] = [];
   private lastKey: string | null = null;
   private lastTime = 0;
 
   /** Record the state *before* a change. */
-  record(prev: Project, selection: ID | null, label: string, coalesceKey?: string): void {
+  record(prev: P, selection: S, label: string, coalesceKey?: string): void {
     const now = Date.now();
     if (coalesceKey && coalesceKey === this.lastKey && now - this.lastTime < COALESCE_MS) {
       this.lastTime = now;
@@ -40,7 +41,7 @@ export class History {
     this.lastKey = null;
   }
 
-  undo(current: HistoryEntry): HistoryEntry | null {
+  undo(current: HistoryEntry<P, S>): HistoryEntry<P, S> | null {
     const entry = this.past.pop();
     if (!entry) return null;
     // The redo entry carries the label of the change being undone.
@@ -49,7 +50,7 @@ export class History {
     return entry;
   }
 
-  redo(current: HistoryEntry): HistoryEntry | null {
+  redo(current: HistoryEntry<P, S>): HistoryEntry<P, S> | null {
     const entry = this.future.pop();
     if (!entry) return null;
     this.past.push({ ...current, label: entry.label });
