@@ -31,7 +31,8 @@ import {
 import { textPresetById } from '../model/textPresets';
 import type { Asset, Clip, ID, MediaClip, Project, ShapeKind } from '../model/types';
 import { importFile, ImportError, type ImportResult } from '../engine/media/importer';
-import { registerBlob, registerDerived } from '../engine/media/mediaStore';
+import { registerBlob, registerDerived, releaseExcept } from '../engine/media/mediaStore';
+import { releaseImages } from '../engine/media/images';
 import { preview } from '../engine/preview';
 import * as db from '../storage/db';
 import { emit } from './events';
@@ -131,8 +132,16 @@ export async function newProject(opts: CreateProjectOptions): Promise<Project> {
   return p;
 }
 
+/** Frees decoded media that belongs to other projects. */
+function releaseOtherMedia(p: Project | null): void {
+  const keep = new Set(p ? Object.keys(p.assets) : []);
+  releaseExcept(keep);
+  releaseImages(keep);
+}
+
 async function openProjectObject(p: Project): Promise<void> {
   preview.stopAll();
+  releaseOtherMedia(p);
   resetEditorState(p);
   route.value = { name: 'editor', projectId: p.id };
   try {
@@ -152,6 +161,7 @@ export async function openProject(id: string): Promise<boolean> {
     }
     const p = migrateProject(raw);
     preview.stopAll();
+    releaseOtherMedia(p);
     resetEditorState(p);
     route.value = { name: 'editor', projectId: p.id };
     emit('project:opened', { kind: p.kind });
@@ -166,6 +176,7 @@ export async function closeProject(): Promise<void> {
   preview.stopAll();
   await flushSave();
   resetEditorState(null);
+  releaseOtherMedia(null);
   route.value = { name: 'home' };
 }
 

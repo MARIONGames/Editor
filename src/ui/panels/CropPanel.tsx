@@ -6,10 +6,11 @@ import type { Crop, MediaClip, Project } from '../../model/types';
 import { peekImage } from '../../engine/media/images';
 import { getDerivedData } from '../../engine/media/mediaStore';
 import { commit, endGesture } from '../../state/actions';
-import { playhead, project, selectedClip } from '../../state/store';
+import { playhead, project } from '../../state/store';
 import { Section } from '../components/Controls';
 import { Slider } from '../components/Slider';
 import { NeedSelection } from './PanelHost';
+import { useMediaSelection } from './AdjustPanel';
 
 const ASPECTS: { id: string; label: string; ratio: number | null | 'original' }[] = [
   { id: 'free', label: 'Free', ratio: null },
@@ -188,13 +189,13 @@ function CropBox({ clip, aspect }: { clip: MediaClip; aspect: number | null }) {
 }
 
 export function CropPanel() {
-  const c = selectedClip.value;
+  const c = useMediaSelection();
   const p = project.value!;
   const [aspectId, setAspectId] = useState('free');
-  if (!c || c.type !== 'media' || p.assets[c.assetId]?.kind === 'audio') {
+  if (!c) {
     return <NeedSelection what="Tap a photo or video first, then crop, rotate or flip it here." />;
   }
-  const clip = c as MediaClip;
+  const clip = c;
   const asset = p.assets[clip.assetId]!;
   const def = ASPECTS.find((a) => a.id === aspectId)!;
   const ratio = def.ratio === 'original' ? asset.width / asset.height : def.ratio;

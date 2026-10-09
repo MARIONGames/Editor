@@ -757,3 +757,22 @@ body.in-editor {
   height: 52px;
   gap: 2px;
 }
+
+/* Tighter top bar on narrow phones so the project name stays readable */
+@media (max-width: 420px) {
+  .editor.compact .topbar .icon-btn {
+    width: 38px;
+  }
+  .editor.compact .topbar {
+    gap: 2px;
+    padding-left: 2px;
+  }
+  .editor.compact .export-btn {
+    padding: 0 12px;
+    margin-left: 2px;
+  }
+  .editor.compact .name-btn {
+    font-size: 15px;
+    padding: 6px 4px;
+  }
+}

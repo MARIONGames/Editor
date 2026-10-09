@@ -37,29 +37,41 @@ function mctx(): Ctx2D {
 const loading = new Set<string>();
 const loaded = new Set<string>();
 
-/** True if the font is ready; otherwise starts loading it and returns false. */
-export function ensureFont(font: string): boolean {
+/**
+ * Web fonts ship in per-script subsets (latin, latin-ext, cyrillic…) that load only when
+ * asked for, so readiness checks name the characters beyond Latin-1 the text uses.
+ */
+function subsetSample(text: string): string {
+  let extra = '';
+  for (const ch of new Set(text)) if (ch.codePointAt(0)! > 0xff) extra += ch;
+  return ' ' + extra;
+}
+
+/** True if the font is ready for `text`; otherwise starts loading it and returns false. */
+export function ensureFont(font: string, text = ''): boolean {
   if (typeof document === 'undefined' || !document.fonts) return true;
-  if (loaded.has(font)) return true;
+  const sample = subsetSample(text);
+  const key = font + sample;
+  if (loaded.has(key)) return true;
   try {
-    if (document.fonts.check(font)) {
-      loaded.add(font);
+    if (document.fonts.check(font, sample)) {
+      loaded.add(key);
       return true;
     }
   } catch {
     return true;
   }
-  if (!loading.has(font)) {
-    loading.add(font);
+  if (!loading.has(key)) {
+    loading.add(key);
     document.fonts
-      .load(font)
+      .load(font, sample)
       .then(() => {
-        loaded.add(font);
+        loaded.add(key);
         layoutCache.clear();
         fontsVersion.value++;
       })
-      .catch(() => loaded.add(font))
-      .finally(() => loading.delete(font));
+      .catch(() => loaded.add(key))
+      .finally(() => loading.delete(key));
   }
   return false;
 }
@@ -67,11 +79,16 @@ export function ensureFont(font: string): boolean {
 /** Waits for every font a project uses (before exporting). */
 export async function loadProjectFonts(p: Project): Promise<void> {
   if (typeof document === 'undefined' || !document.fonts) return;
-  const fonts = new Set<string>();
+  const texts = new Map<string, string>();
   for (const t of p.tracks)
     for (const c of t.clips)
-      if (c.type === 'text') fonts.add(cssFont(c.style.font, c.style.weight, 64, c.style.italic));
-  await Promise.all([...fonts].map((f) => document.fonts.load(f).catch(() => undefined)));
+      if (c.type === 'text') {
+        const font = cssFont(c.style.font, c.style.weight, 64, c.style.italic);
+        texts.set(font, (texts.get(font) ?? '') + (c.style.uppercase ? c.text.toUpperCase() : c.text));
+      }
+  await Promise.all(
+    [...texts].map(([font, text]) => document.fonts.load(font, subsetSample(text)).catch(() => undefined)),
+  );
   layoutCache.clear();
 }
 
@@ -104,10 +121,10 @@ export function layoutText(clip: TextClip, maxWidth: number): TextLayout {
   if (cached) return cached;
   const ctx = mctx();
   const font = cssFont(st.font, st.weight, st.size, st.italic);
-  ensureFont(font);
+  const raw = (st.uppercase ? clip.text.toUpperCase() : clip.text) || ' ';
+  ensureFont(font, raw);
   ctx.font = font;
   const spacing = st.letterSpacing * st.size;
-  const raw = (st.uppercase ? clip.text.toUpperCase() : clip.text) || ' ';
   const lines: string[] = [];
   for (const para of raw.split('\n')) {
     const words = para.split(/(\s+)/);

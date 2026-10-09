@@ -11,6 +11,9 @@
   --border: #2c2e3b;
   --border-strong: #3c3f52;
   --stage-bg: #08080b;
+  --ruler-tick: #6f7287;
+  --ruler-text: #a9acc0;
+  --playhead: #ffffff;
 
   --text: #f3f3f8;
   --text-dim: #a9acc0;
@@ -65,6 +68,9 @@
   --border: #e0e0ea;
   --border-strong: #c9c9d8;
   --stage-bg: #dcdce6;
+  --ruler-tick: #9a9db0;
+  --ruler-text: #565a70;
+  --playhead: #15151d;
   --text: #15151d;
   --text-dim: #565a70;
   --text-faint: #8a8da3;
@@ -88,6 +94,9 @@
     --border: #e0e0ea;
     --border-strong: #c9c9d8;
     --stage-bg: #dcdce6;
+    --ruler-tick: #9a9db0;
+    --ruler-text: #565a70;
+    --playhead: #15151d;
     --text: #15151d;
     --text-dim: #565a70;
     --text-faint: #8a8da3;

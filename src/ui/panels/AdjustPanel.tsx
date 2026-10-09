@@ -17,7 +17,14 @@ const BASIC = new Set<AdjustKey>(['exposure', 'contrast', 'highlights', 'shadows
 export function useMediaSelection(): MediaClip | null {
   const c = selectedClip.value;
   const p = project.value;
-  if (!c || !p || c.type !== 'media') return null;
+  if (!p) return null;
+  if (!c) {
+    // Photo projects: with nothing selected, tools apply to the photo itself.
+    if (p.kind !== 'photo') return null;
+    const base = p.tracks[0]?.clips[0];
+    return base?.type === 'media' ? base : null;
+  }
+  if (c.type !== 'media') return null;
   if (p.assets[c.assetId]?.kind === 'audio') return null;
   return c;
 }

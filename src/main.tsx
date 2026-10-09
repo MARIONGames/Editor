@@ -1,4 +1,5 @@
 import { render } from 'preact';
+// Swapped for an empty stylesheet in the artifact demo build, which loads these fonts from Google Fonts.
 import './styles/fonts.css';
 import './styles/tokens.css';
 import './styles/base.css';
@@ -36,7 +37,7 @@ if (problem) {
   initRouter();
 }
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext && window.top === window) {
+if (import.meta.env.PROD && import.meta.env.MODE !== 'artifact' && 'serviceWorker' in navigator && window.isSecureContext && window.top === window) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => undefined);
   });

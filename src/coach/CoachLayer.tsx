@@ -58,7 +58,13 @@ function Callout(props: { rect: Rect | null; title: string; body: string; next?:
   const vh = window.innerHeight;
   const cardW = Math.min(340, vw - 24);
   let style: Record<string, string>;
-  if (rect) {
+  if (rect && vw < 700) {
+    // Phones: put the card in the other half of the screen so it never covers what you need to tap.
+    const targetLow = rect.y + rect.h / 2 > vh / 2;
+    style = targetLow
+      ? { left: `${(vw - cardW) / 2}px`, top: `${Math.max(64, Math.min(rect.y - 12, vh * 0.42) - 190)}px`, width: `${cardW}px` }
+      : { left: `${(vw - cardW) / 2}px`, top: `${Math.min(vh - 210, rect.y + rect.h + 16)}px`, width: `${cardW}px` };
+  } else if (rect) {
     const below = rect.y + rect.h + 200 < vh || rect.y < vh / 2;
     const left = Math.max(12, Math.min(vw - cardW - 12, rect.x + rect.w / 2 - cardW / 2));
     style = below

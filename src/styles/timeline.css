@@ -21,13 +21,6 @@
   cursor: pointer;
   touch-action: none;
   border-bottom: 1px solid var(--border);
-  --ruler-tick: #6f7287;
-  --ruler-text: #a9acc0;
-}
-
-:root[data-theme='light'] .tl-ruler {
-  --ruler-tick: #9a9db0;
-  --ruler-text: #565a70;
 }
 
 .tl-scroll {
@@ -334,14 +327,10 @@
   left: 50%;
   width: 2px;
   margin-left: -1px;
-  background: #fff;
+  background: var(--playhead);
   pointer-events: none;
   z-index: 6;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-}
-
-:root[data-theme='light'] .tl-playhead {
-  background: #15151d;
 }
 
 .tl-playhead::before {
@@ -352,11 +341,7 @@
   border-left: 7px solid transparent;
   border-right: 7px solid transparent;
   border-top: 9px solid currentColor;
-  color: #fff;
-}
-
-:root[data-theme='light'] .tl-playhead::before {
-  color: #15151d;
+  color: var(--playhead);
 }
 
 .tl-snap {

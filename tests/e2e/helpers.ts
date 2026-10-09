@@ -1,7 +1,8 @@
 import { expect, type Page } from '@playwright/test';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const FIXTURES = path.resolve(__dirname, '../fixtures');
+export const FIXTURES = fileURLToPath(new URL('../fixtures', import.meta.url));
 
 /** Opens the app with the tour already done (tests drive the UI themselves). */
 export async function openApp(page: Page, opts: { tour?: boolean } = {}): Promise<string[]> {

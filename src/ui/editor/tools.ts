@@ -72,7 +72,9 @@ function basePhotoTool(id: PanelId, text: ToolText, icon: ToolDef['icon'], coach
     active: panel.value === id,
     run: () => {
       const p = project.peek();
-      if (p && !selectionId.peek()) {
+      const sel = p ? findClip(p, selectionId.peek())?.clip : null;
+      // "Edit the photo" tools work on the photo unless another photo is selected.
+      if (p && sel?.type !== 'media') {
         const base = p.tracks.find((t) => t.clips[0]?.type === 'media')?.clips[0];
         if (base) select(base.id);
       }
@@ -136,11 +138,11 @@ export function clipTools(p: Project, clip: Clip): ToolDef[] {
     if (!isAudio) tools.push(panelTool('crop', TOOL_TEXT.crop, Crop));
     if (!isAudio && isVideoProject) tools.push(motion);
     if (onMain && loc && loc.clipIndex > 0) tools.push(panelTool('transition', TOOL_TEXT.transition, ArrowLeftRight));
-    if (!isAudio && (!onMain || p.kind === 'photo')) tools.push(position);
+    if (!isAudio) tools.push(position);
+    // Green screen only makes sense for something on top of something else.
     if (!isAudio && !onMain && !(p.kind === 'photo' && loc?.trackIndex === 0)) {
       tools.push(panelTool('greenscreen', TOOL_TEXT.greenscreen, Pipette));
     }
-    if (onMain && !isAudio) tools.push(position);
     tools.push({
       id: 'replace',
       text: TOOL_TEXT.replace,

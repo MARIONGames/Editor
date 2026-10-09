@@ -9,6 +9,7 @@ import { flushSave } from '../../state/persist';
 import { emit } from '../../state/events';
 import { playhead, project, toast } from '../../state/store';
 import { preview } from '../../engine/preview';
+import { inHostFrame, saveFile } from '../../platform/host';
 import { Dialog } from '../components/Dialog';
 import { Segmented, Switch } from '../components/Controls';
 import { Slider } from '../components/Slider';
@@ -42,15 +43,11 @@ function fileName(p: Project, ext: string): string {
   return `${base}.${ext}`;
 }
 
-function download(blob: Blob, name: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+async function download(blob: Blob, name: string): Promise<void> {
+  const outcome = await saveFile(blob, name);
+  if (outcome === 'saved') toast(`Saved “${name}”`, 'success');
+  else if (outcome === 'declined') toast('Not saved.');
+  else toast('Saving files isn’t available here. Open Kinora in its own browser tab to save.', 'error', undefined, 6000);
 }
 
 async function share(blob: Blob, name: string): Promise<boolean> {
@@ -169,7 +166,7 @@ export function ExportDialog() {
   }
 
   if (phase === 'done' && result && url) {
-    const canShare = typeof navigator.share === 'function';
+    const canShare = typeof navigator.share === 'function' && !inHostFrame;
     return (
       <Dialog title="It’s ready! 🎉" subtitle={result.details} onClose={close}>
         <div class="export-done">
@@ -179,7 +176,7 @@ export function ExportDialog() {
             <img src={url} alt="Your exported picture" class="export-preview" />
           )}
           <div class="row wrap-gap center">
-            <button class="btn primary" onClick={() => download(result.blob, result.name)}>
+            <button class="btn primary" onClick={() => void download(result.blob, result.name)}>
               <Download size={18} /> Save to device
             </button>
             {canShare && (

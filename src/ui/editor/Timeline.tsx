@@ -156,6 +156,18 @@ export function Timeline() {
     ctx.stroke();
   };
 
+  // The ruler's colors come from theme tokens: repaint when the theme flips.
+  useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: light)');
+    const mo = new MutationObserver(drawRuler);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    mq.addEventListener('change', drawRuler);
+    return () => {
+      mo.disconnect();
+      mq.removeEventListener('change', drawRuler);
+    };
+  }, []);
+
   const rulerSeek = (e: PointerEvent) => {
     const el = scrollRef.current!;
     const r = el.getBoundingClientRect();

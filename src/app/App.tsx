@@ -10,8 +10,16 @@ export function App() {
   const theme = settings.value.theme;
   useEffect(() => {
     const el = document.documentElement;
-    if (theme === 'system') el.removeAttribute('data-theme');
-    else el.setAttribute('data-theme', theme);
+    // Only clear a theme we set ourselves: a host page may set its own.
+    if (theme === 'system') {
+      if (el.dataset.kinoraTheme) {
+        el.removeAttribute('data-theme');
+        delete el.dataset.kinoraTheme;
+      }
+    } else {
+      el.setAttribute('data-theme', theme);
+      el.dataset.kinoraTheme = '1';
+    }
     const meta = document.querySelector('meta[name="theme-color"]');
     const light = theme === 'light' || (theme === 'system' && matchMedia('(prefers-color-scheme: light)').matches);
     meta?.setAttribute('content', light ? '#f4f4f8' : '#0e0f13');

@@ -31,8 +31,8 @@ export async function startPhotoEdit(): Promise<void> {
   const files = await pickFiles({ accept: ACCEPT_IMAGE });
   if (!files.length) return;
   await newProject({ kind: 'photo', width: 1080, height: 1080, name: 'My photo' });
-  await importFiles(files.slice(0, 1));
-  select(null);
+  const ids = await importFiles(files.slice(0, 1));
+  if (ids[0]) select(ids[0]);
   openPanel('adjust');
 }
 
