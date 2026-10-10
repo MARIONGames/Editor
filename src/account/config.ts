@@ -1,12 +1,14 @@
 /**
- * Where the Kinora account service lives. Set at build time with VITE_KINORA_API
- * (e.g. in .env.production). Without it, accounts are hidden and Kinora works exactly
- * as before — everything stays on the device.
+ * Where the Kinora account service lives (server/worker.js on Cloudflare Workers).
+ * VITE_KINORA_API at build time overrides it; set it to "off" to build without accounts.
  */
+export const DEFAULT_API = 'https://kinora-api.rubby-studios.com';
+
 function readBase(): string {
   // The sandboxed demo build can't reach other servers.
   if (import.meta.env.MODE === 'artifact') return '';
-  let base = (import.meta.env.VITE_KINORA_API as string | undefined) ?? '';
+  const env = ((import.meta.env.VITE_KINORA_API as string | undefined) ?? '').trim();
+  let base = env === 'off' ? '' : env || DEFAULT_API;
   try {
     // Developers can point a build at another server without rebuilding.
     base = localStorage.getItem('kinora.api') ?? base;

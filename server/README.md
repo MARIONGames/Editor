@@ -86,9 +86,9 @@ If you see `"no_database"` instead, step 4 is missing or the binding isn't named
 
 ### 7. Connect the app
 
-Send the Worker address (`https://kinora-api.<your-name>.workers.dev`) to whoever builds
-Kinora. The app takes it as `VITE_KINORA_API` at build time. Until then the Sign in
-button stays hidden and Kinora works exactly as before.
+The app is already set to `https://kinora-api.rubby-studios.com`
+(`DEFAULT_API` in `src/account/config.ts`). A different address can be given at build
+time with `VITE_KINORA_API`.
 
 ### 8. (Optional) Your own domain
 

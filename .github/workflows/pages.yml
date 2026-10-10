@@ -35,8 +35,8 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # Account service address (Settings → Secrets and variables → Actions → Variables).
-          # Empty = accounts hidden; everything else works the same.
+          # Optional override of the account service address (repository variable KINORA_API).
+          # Empty = the built-in https://kinora-api.rubby-studios.com; "off" = no accounts.
           VITE_KINORA_API: ${{ vars.KINORA_API }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

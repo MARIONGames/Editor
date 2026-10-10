@@ -101,8 +101,8 @@ service is needed.
 
 The backend is one Cloudflare Worker file with a D1 database:
 [`server/worker.js`](server/worker.js). [server/README.md](server/README.md) explains the
-setup step by step in the Cloudflare dashboard. Point the app at it with
-`VITE_KINORA_API` (see `.env.example`). Without it, the Sign in button is hidden.
+setup step by step in the Cloudflare dashboard. The app uses it at
+`https://kinora-api.rubby-studios.com` (override with `VITE_KINORA_API`, see `.env.example`).
 
 ## Browser support
 
