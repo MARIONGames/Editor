@@ -5,10 +5,11 @@
     "moduleResolution": "bundler",
     "lib": ["es2022"],
     "types": ["@cloudflare/workers-types"],
+    "allowJs": true,
+    "checkJs": true,
     "strict": true,
-    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["worker.js"]
 }

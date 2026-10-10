@@ -1,6 +1,6 @@
 /**
- * End-to-end check of the API. Run against `npm run dev` (default) or a deployed URL:
- *   node test/smoke.mjs [https://api.example.com]
+ * End-to-end check of the accounts API. Run against `npm run dev` (default) or your Worker:
+ *   node test/smoke.mjs https://kinora-api.<you>.workers.dev
  * It creates a throw-away account and deletes it again at the end.
  */
 const API = (process.argv[2] ?? 'http://127.0.0.1:8787').replace(/\/$/, '');
@@ -12,13 +12,12 @@ function check(label, ok, extra = '') {
   if (!ok) failures++;
 }
 
-async function call(path, { method = 'GET', token, json, body, headers = {} } = {}) {
-  const h = { Origin: ORIGIN, ...headers };
-  if (token) h.Authorization = `Bearer ${token}`;
-  if (json !== undefined) h['Content-Type'] = 'application/json';
-  const res = await fetch(API + path, { method, headers: h, body: json !== undefined ? JSON.stringify(json) : body });
-  const type = res.headers.get('Content-Type') ?? '';
-  const data = type.includes('json') ? await res.json() : new Uint8Array(await res.arrayBuffer());
+async function call(path, { method = 'GET', token, json } = {}) {
+  const headers = { Origin: ORIGIN };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (json !== undefined) headers['Content-Type'] = 'application/json';
+  const res = await fetch(API + path, { method, headers, body: json !== undefined ? JSON.stringify(json) : undefined });
+  const data = res.status === 204 ? null : await res.json().catch(() => null);
   return { status: res.status, data, headers: res.headers };
 }
 
@@ -26,97 +25,56 @@ const email = `smoke-${Date.now()}@example.com`;
 const password = 'correct horse battery';
 
 const health = await call('/v1/health');
-check('health', health.status === 200 && health.data.ok);
+check('health', health.status === 200 && health.data?.ok === true, JSON.stringify(health.data));
 
 const pre = await fetch(`${API}/v1/me`, { method: 'OPTIONS', headers: { Origin: ORIGIN, 'Access-Control-Request-Method': 'GET' } });
-check('CORS preflight allows the app', pre.headers.get('Access-Control-Allow-Origin') === ORIGIN);
+check('CORS allows the app', pre.headers.get('Access-Control-Allow-Origin') === ORIGIN);
 const bad = await fetch(`${API}/v1/health`, { headers: { Origin: 'https://evil.example' } });
+await bad.text();
 check('CORS refuses other sites', !bad.headers.get('Access-Control-Allow-Origin'));
 
-const weak = await call('/v1/auth/signup', { method: 'POST', json: { email, password: 'short', eula: 'test' } });
-check('rejects short passwords', weak.status === 400);
+check('rejects short passwords', (await call('/v1/auth/signup', { method: 'POST', json: { email, password: 'short', eula: 'x' } })).status === 400);
 const su = await call('/v1/auth/signup', { method: 'POST', json: { email, password, name: 'Smoke Test', eula: '2026-10-10' } });
-check('sign up', su.status === 201 && typeof su.data.token === 'string', JSON.stringify(su.data.user));
-const token1 = su.data.token;
-const dup = await call('/v1/auth/signup', { method: 'POST', json: { email: email.toUpperCase(), password, eula: 'x' } });
-check('one account per email', dup.status === 409 && dup.data.error.code === 'email_taken');
+check('sign up', su.status === 201 && typeof su.data?.token === 'string' && /^[A-Z0-9]{5}(-[A-Z0-9]{5}){3}$/.test(su.data?.recoveryCode ?? ''), su.data?.recoveryCode);
+const t1 = su.data.token;
+const code1 = su.data.recoveryCode;
+check('one account per email', (await call('/v1/auth/signup', { method: 'POST', json: { email: email.toUpperCase(), password, eula: 'x' } })).status === 409);
 
-const wrong = await call('/v1/auth/login', { method: 'POST', json: { email, password: 'nope nope nope' } });
-check('wrong password refused', wrong.status === 401);
+check('wrong password refused', (await call('/v1/auth/login', { method: 'POST', json: { email, password: 'nope nope nope' } })).status === 401);
 const li = await call('/v1/auth/login', { method: 'POST', json: { email, password } });
-check('sign in', li.status === 200 && li.data.user.email === email);
-const token2 = li.data.token;
+check('sign in', li.status === 200 && li.data?.user?.email === email);
+const t2 = li.data.token;
 
-const me = await call('/v1/me', { token: token1 });
-check('me', me.status === 200 && me.data.user.name === 'Smoke Test' && me.data.usage.quota > 0, JSON.stringify(me.data.usage));
-const renamed = await call('/v1/me', { method: 'PATCH', token: token1, json: { name: 'Renamed' } });
-check('rename', renamed.data.user?.name === 'Renamed');
-const anon = await call('/v1/me');
-check('requires sign-in', anon.status === 401);
+const me = await call('/v1/me', { token: t1 });
+check('me', me.status === 200 && me.data?.user?.name === 'Smoke Test');
+check('rename', (await call('/v1/me', { method: 'PATCH', token: t1, json: { name: 'Renamed' } })).data?.user?.name === 'Renamed');
+check('requires sign-in', (await call('/v1/me')).status === 401);
 
-// Media + project backup.
-const chk = await call('/v1/media/check', { method: 'POST', token: token1, json: { ids: ['a1', 'a2'] } });
-check('media check lists missing', JSON.stringify(chk.data.missing) === '["a1","a2"]');
-const pic = new Uint8Array(1000).map((_, i) => i % 251);
-const up = await call('/v1/media/a1', { method: 'PUT', token: token1, body: pic, headers: { 'Content-Type': 'image/png' } });
-check('upload media', up.status === 204);
-const chk2 = await call('/v1/media/check', { method: 'POST', token: token1, json: { ids: ['a1', 'a2'] } });
-check('media now stored', JSON.stringify(chk2.data.missing) === '["a2"]');
-const down = await call('/v1/media/a1', { token: token1 });
-check('download media', down.status === 200 && down.data.length === 1000 && down.data[10] === 10 && down.headers.get('Content-Type') === 'image/png');
+check('change password', (await call('/v1/me/password', { method: 'POST', token: t1, json: { current: password, next: 'another long password' } })).status === 204);
+check('other devices signed out', (await call('/v1/me', { token: t2 })).status === 401);
+check('this device stays signed in', (await call('/v1/me', { token: t1 })).status === 200);
 
-const project = new TextEncoder().encode(JSON.stringify({ id: 'p1', name: 'Trip', clips: [1, 2, 3] }));
-const meta = (updated, base) => ({
-  'X-Kinora-Kind': 'project',
-  'X-Kinora-Name': encodeURIComponent('Trip ✈'),
-  'X-Kinora-Updated': String(updated),
-  'X-Kinora-Assets': 'a1',
-  'X-Kinora-Base': String(base),
-});
-const put1 = await call('/v1/items/p1', { method: 'PUT', token: token1, body: project, headers: meta(1000, 0) });
-check('back up a project', put1.status === 200 && put1.data.item.updatedAt === 1000);
-const list = await call('/v1/items', { token: token2 });
-check('other device sees it', list.data.items.length === 1 && list.data.items[0].name === 'Trip ✈');
-const got = await call('/v1/items/p1', { token: token2 });
-check('download project', new TextDecoder().decode(got.data) === new TextDecoder().decode(project) && got.headers.get('X-Kinora-Updated') === '1000');
-const stale = await call('/v1/items/p1', { method: 'PUT', token: token2, body: project, headers: meta(2000, 500) });
-check('stale write is a conflict', stale.status === 409 && stale.data.error.code === 'conflict');
-const put2 = await call('/v1/items/p1', { method: 'PUT', token: token2, body: project, headers: meta(2000, 1000) });
-check('newer write accepted', put2.status === 200);
-const del = await call('/v1/items/p1?base=2000', { method: 'DELETE', token: token1 });
-check('delete project', del.status === 204);
-const list2 = await call('/v1/items', { token: token1 });
-check('deletion is shared', list2.data.items[0]?.deleted === true);
+// Forgot password: the recovery code works once and is replaced.
+check('wrong recovery code refused', (await call('/v1/auth/recover', { method: 'POST', json: { email, recoveryCode: 'AAAAA-BBBBB-CCCCC-DDDDD', password: 'brand new password' } })).status === 401);
+const rec = await call('/v1/auth/recover', { method: 'POST', json: { email, recoveryCode: code1.toLowerCase(), password: 'brand new password' } });
+check('recover with code', rec.status === 200 && typeof rec.data?.token === 'string' && rec.data?.recoveryCode !== code1);
+check('old sessions ended', (await call('/v1/me', { token: t1 })).status === 401);
+check('code works only once', (await call('/v1/auth/recover', { method: 'POST', json: { email, recoveryCode: code1, password: 'yet another password' } })).status === 401);
+const t3 = rec.data.token;
+const newCode = await call('/v1/me/recovery', { method: 'POST', token: t3, json: { password: 'brand new password' } });
+check('new recovery code', newCode.status === 200 && newCode.data?.recoveryCode !== rec.data.recoveryCode);
 
-// Password change signs out other devices.
-const cp = await call('/v1/me/password', { method: 'POST', token: token1, json: { current: password, next: 'another long password' } });
-check('change password', cp.status === 204);
-const old = await call('/v1/me', { token: token2 });
-check('other devices signed out', old.status === 401);
-const still = await call('/v1/me', { token: token1 });
-check('this device stays signed in', still.status === 200);
+const out = await call('/v1/auth/logout', { method: 'POST', token: t3 });
+check('sign out', out.status === 204 && (await call('/v1/me', { token: t3 })).status === 401);
 
-const forgot = await call('/v1/auth/forgot', { method: 'POST', json: { email } });
-check('password reset (needs RESEND_API_KEY)', forgot.status === 204 || forgot.status === 501, `status ${forgot.status}`);
+const t4 = (await call('/v1/auth/login', { method: 'POST', json: { email, password: 'brand new password' } })).data?.token;
+check('delete needs the password', (await call('/v1/me', { method: 'DELETE', token: t4, json: { password: 'wrong' } })).status === 403);
+check('delete account', (await call('/v1/me', { method: 'DELETE', token: t4, json: { password: 'brand new password' } })).status === 204);
+check('account is gone', (await call('/v1/auth/login', { method: 'POST', json: { email, password: 'brand new password' } })).status === 401);
 
-const out = await call('/v1/auth/logout', { method: 'POST', token: token1 });
-check('sign out', out.status === 204 && (await call('/v1/me', { token: token1 })).status === 401);
-
-// Account deletion removes everything.
-const li2 = await call('/v1/auth/login', { method: 'POST', json: { email, password: 'another long password' } });
-const t3 = li2.data.token;
-const nope = await call('/v1/me', { method: 'DELETE', token: t3, json: { password: 'wrong' } });
-check('delete needs the password', nope.status === 403);
-const gone = await call('/v1/me', { method: 'DELETE', token: t3, json: { password: 'another long password' } });
-check('delete account', gone.status === 204);
-const after = await call('/v1/auth/login', { method: 'POST', json: { email, password: 'another long password' } });
-check('account is gone', after.status === 401);
-
-// Password guessing is slowed down.
 let throttled = false;
 for (let i = 0; i < 12 && !throttled; i++) {
-  const r = await call('/v1/auth/login', { method: 'POST', json: { email: `guess-${email}`, password: `guess ${i}` } });
-  throttled = r.status === 429;
+  throttled = (await call('/v1/auth/login', { method: 'POST', json: { email: `guess-${email}`, password: `guess ${i}` } })).status === 429;
 }
 check('password guessing is throttled', throttled);
 

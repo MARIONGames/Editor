@@ -34,7 +34,7 @@ import { confirmDialog, openDialog, promptDialog } from '../dialogs/dialogState'
 import { startMeme, startPhotoEdit, startQuickTrim, startSlideshow, startVideo } from './flows';
 import { pickFiles } from '../components/filePicker';
 import { COPYRIGHT } from '../../legal/eula';
-import { accountsEnabled } from '../../account/config';
+import { accountsEnabled, BACKUP_ENABLED } from '../../account/config';
 import { account } from '../../account/session';
 import { notifyDeleted, syncLabel, syncState } from '../../account/sync';
 import { on } from '../../state/events';
@@ -418,8 +418,7 @@ export function Home() {
           </div>
           <div class="promises">
             <span>
-              <ShieldCheck size={18} /> Private: your files stay on this device (cloud backup is
-              optional)
+              <ShieldCheck size={18} /> Private: your files never leave this device
             </span>
             <span>
               <WifiOff size={18} /> Works offline
@@ -452,7 +451,7 @@ function AccountButton() {
       <button
         class="btn ghost small"
         onClick={() => openDialog({ type: 'account' })}
-        title="Optional: back up your projects and use them on other devices"
+        title="Optional: a Kinora account"
       >
         <UserRound size={18} /> <span class="hide-xs">Sign in</span>
       </button>
@@ -462,11 +461,13 @@ function AccountButton() {
     <button
       class={`account-chip status-${st.status}`}
       onClick={() => openDialog({ type: 'account' })}
-      title={`${acc.user.name} — ${syncLabel(st)}`}
-      aria-label={`Account: ${acc.user.name}. ${syncLabel(st)}`}
+      title={BACKUP_ENABLED ? `${acc.user.name} — ${syncLabel(st)}` : acc.user.name}
+      aria-label={
+        BACKUP_ENABLED ? `Account: ${acc.user.name}. ${syncLabel(st)}` : `Account: ${acc.user.name}`
+      }
     >
       <span class="account-avatar small">{acc.user.name.slice(0, 1).toUpperCase()}</span>
-      <span class="account-dot" />
+      {BACKUP_ENABLED && <span class="account-dot" />}
     </button>
   );
 }

@@ -13,7 +13,7 @@ import { route, toast } from '../state/store';
 import * as db from '../storage/db';
 import { uid as newId } from '../util/id';
 import { ApiError, callRaw, OfflineError } from './api';
-import { accountsEnabled } from './config';
+import { accountsEnabled, BACKUP_ENABLED } from './config';
 import { account, authed, refreshAccount } from './session';
 import { pack, packDerived, unpack, unpackDerived } from './serialize';
 
@@ -94,7 +94,7 @@ let running: Promise<void> | null = null;
 
 /** Syncs soon (debounced). Safe to call often. */
 export function requestSync(delay = 1500): void {
-  if (!accountsEnabled || !account.peek() || !autoBackup.peek()) return;
+  if (!BACKUP_ENABLED || !accountsEnabled || !account.peek() || !autoBackup.peek()) return;
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
@@ -103,7 +103,7 @@ export function requestSync(delay = 1500): void {
 }
 
 export function syncNow(): Promise<void> {
-  if (!account.peek()) return Promise.resolve();
+  if (!BACKUP_ENABLED || !account.peek()) return Promise.resolve();
   running ??= run().finally(() => (running = null));
   return running;
 }
@@ -346,7 +346,7 @@ let started = false;
 
 /** Starts background sync (sign-in, coming back online, leaving a project, every few minutes). */
 export function startSync(): void {
-  if (started || !accountsEnabled) return;
+  if (started || !accountsEnabled || !BACKUP_ENABLED) return;
   started = true;
   requestSync(3000);
   window.addEventListener('online', () => requestSync(1000));

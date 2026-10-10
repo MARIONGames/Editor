@@ -2,15 +2,13 @@
   "name": "kinora-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Kinora accounts and cloud backup — a Cloudflare Worker with D1 and R2. © 2026 Marios Kouretis. All rights reserved.",
+  "description": "Kinora accounts \u2014 one Cloudflare Worker file with a D1 database. \u00a9 2026 Marios Kouretis. All rights reserved.",
   "author": "Marios Kouretis",
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:migrate:local": "wrangler d1 migrations apply kinora --local",
-    "db:migrate": "wrangler d1 migrations apply kinora --remote",
     "check": "tsc --noEmit",
     "test": "node test/smoke.mjs"
   },

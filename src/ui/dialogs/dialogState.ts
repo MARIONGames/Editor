@@ -9,7 +9,7 @@ export type DialogState =
   | { type: 'shortcuts' }
   | { type: 'settings' }
   | { type: 'eula' }
-  | { type: 'account'; mode?: 'signin' | 'signup' | 'forgot' | 'reset'; token?: string }
+  | { type: 'account'; mode?: 'signin' | 'signup' | 'recover' }
   | { type: 'notices' }
   | { type: 'templates' }
   | {
@@ -27,7 +27,13 @@ export type DialogState =
       danger?: boolean;
       resolve: (ok: boolean) => void;
     }
-  | { type: 'prompt'; title: string; label: string; value: string; resolve: (v: string | null) => void };
+  | {
+      type: 'prompt';
+      title: string;
+      label: string;
+      value: string;
+      resolve: (v: string | null) => void;
+    };
 
 export const dialog = signal<DialogState | null>(null);
 
@@ -44,7 +50,12 @@ export function closeDialog(): void {
   if (d?.type === 'prompt') d.resolve(null);
 }
 
-export function confirmDialog(opts: { title: string; message: string; confirmLabel?: string; danger?: boolean }): Promise<boolean> {
+export function confirmDialog(opts: {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  danger?: boolean;
+}): Promise<boolean> {
   return new Promise((resolve) => {
     dialog.value = {
       type: 'confirm',
@@ -63,7 +74,11 @@ export function promptDialog(title: string, label: string, value: string): Promi
   });
 }
 
-export function pickAspect(title: string, subtitle?: string, allowAuto = true): Promise<AspectChoice | null> {
+export function pickAspect(
+  title: string,
+  subtitle?: string,
+  allowAuto = true,
+): Promise<AspectChoice | null> {
   return new Promise((resolve) => {
     dialog.value = { type: 'aspect', title, subtitle, allowAuto, resolve };
   });

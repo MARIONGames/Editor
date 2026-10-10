@@ -1,179 +1,144 @@
-# Kinora accounts & cloud backup (Cloudflare Worker)
+# Kinora accounts — Cloudflare Worker
 
 © 2026 Marios Kouretis. All rights reserved.
 
-This is the backend for Kinora accounts. It runs on **Cloudflare Workers** with:
+The whole backend is **one file, [`worker.js`](worker.js)**. It runs on Cloudflare Workers
+with one **D1 database** (Cloudflare's built-in SQL database). Nothing else is needed: no
+server of your own, no file storage and no email service. Cloud backup is switched off,
+so accounts only hold a name, an email and a password. Projects never leave people's
+devices.
 
-- **D1** (Cloudflare's SQLite database): accounts, sign-in sessions and the list of backed-up projects.
-- **R2** (Cloudflare's file storage): the backed-up projects and their photos, videos and 3D models.
+What it does:
 
-Kinora works without this service, including offline. An account is optional and only
-adds cloud backup and sync between devices.
+- sign up, sign in, sign out
+- change name, change password (other devices are signed out)
+- forgot password with a **recovery code**: shown once at sign-up, it works once and a
+  new one is given each time
+- delete account
+- throttles password guessing; passwords are stored only as salted PBKDF2 hashes
 
-Everything below fits in Cloudflare's free plan to start: 100,000 requests a day, 5 GB of
-D1 and 10 GB of R2.
+Cost: Cloudflare's free plan is enough to start. It covers 100,000 requests a day and
+5 GB of D1.
 
-## What you need
+---
 
-- A Cloudflare account (free): <https://dash.cloudflare.com/sign-up>
-- Your domain added to Cloudflare. Skip this until you want the API on your own domain;
-  it also works at a free `*.workers.dev` address.
-- Node.js 20 or newer on your computer: <https://nodejs.org>
+## Setup in the Cloudflare dashboard (no command line)
 
-## Step by step
+### 1. Create a Cloudflare account
 
-All commands run in this `server/` folder.
+Go to <https://dash.cloudflare.com/sign-up> and verify your email.
 
-### 1. Install the tools
+### 2. Create the database
+
+1. In the left menu: **Storage & databases → D1 SQL database**.
+2. Click **Create database**.
+3. Name: `kinora`. Location: leave **Automatic**.
+4. Click **Create**.
+
+That's all for the database. You don't need to create tables or run SQL: the Worker
+creates its tables the first time it runs.
+
+### 3. Create the Worker
+
+1. In the left menu: **Compute (Workers) → Workers & Pages**.
+2. Click **Create** and choose **Start with Hello World!** (or **Create Worker**).
+3. Name: `kinora-api`. Click **Deploy**.
+4. Click **Edit code**.
+5. In the editor, delete everything in `worker.js` and paste the whole content of
+   [`worker.js`](worker.js) from this folder.
+6. Click **Deploy** (top right).
+
+### 4. Connect the database to the Worker
+
+1. Open the Worker `kinora-api`, then the **Bindings** tab (or **Settings → Bindings**).
+2. Click **Add binding** and choose **D1 database**.
+3. Variable name: `DB` (exactly that, capital letters).
+4. D1 database: `kinora`.
+5. Click **Add binding**. Deploy again if it asks.
+
+### 5. (Optional) Choose which websites may use it
+
+By default, the Worker accepts requests from the GitHub Pages site
+(`https://mariongames.github.io`), the Windows app (`app://kinora`) and local
+development. To change this:
+
+1. Worker → **Settings → Variables and Secrets → Add**.
+2. Type **Text**, name `ALLOWED_ORIGINS`, value: a comma-separated list, e.g.
+   `https://mariongames.github.io,app://kinora,https://kinora.example.com`.
+3. Click **Deploy**.
+
+### 6. Check that it works
+
+On the Worker's page, copy its address. It looks like
+`https://kinora-api.<your-name>.workers.dev`. Open this in a browser:
+
+```
+https://kinora-api.<your-name>.workers.dev/v1/health
+```
+
+You should see:
+
+```json
+{"ok":true,"service":"kinora-accounts","version":"1.0.0","backup":false}
+```
+
+If you see `"no_database"` instead, step 4 is missing or the binding isn't named `DB`.
+
+### 7. Connect the app
+
+Send the Worker address (`https://kinora-api.<your-name>.workers.dev`) to whoever builds
+Kinora. The app takes it as `VITE_KINORA_API` at build time. Until then the Sign in
+button stays hidden and Kinora works exactly as before.
+
+### 8. (Optional) Your own domain
+
+Worker → **Settings → Domains & Routes → Add → Custom domain** → e.g. `api.yourdomain.com`.
+The domain must be on Cloudflare (**Add a domain** on the dashboard home). Cloudflare
+creates the DNS record and HTTPS certificate automatically. If you do this, send the
+new address instead.
+
+### Updating the code later
+
+Worker → **Edit code** → paste the new `worker.js` → **Deploy**. Accounts stay; they
+live in the database, not in the code.
+
+### Seeing the accounts
+
+**Storage & databases → D1 → kinora → Console** runs SQL, for example:
+
+```sql
+SELECT email, name, datetime(created_at / 1000, 'unixepoch') AS created FROM users ORDER BY created_at DESC;
+```
+
+Passwords and recovery codes are stored only as hashes and can't be read back.
+
+---
+
+## API
+
+JSON in and out. Signed-in calls send `Authorization: Bearer <token>`.
+
+| Method & path | Body | Result |
+| --- | --- | --- |
+| `GET /v1/health` | | `{ok, service, version, backup}` |
+| `POST /v1/auth/signup` | `{name, email, password, eula}` | `{token, user, recoveryCode}` |
+| `POST /v1/auth/login` | `{email, password}` | `{token, user}` |
+| `POST /v1/auth/recover` | `{email, recoveryCode, password}` | `{token, user, recoveryCode}` (new code; other sessions end) |
+| `POST /v1/auth/logout` | | 204 |
+| `GET /v1/me` | | `{user}` |
+| `PATCH /v1/me` | `{name}` | `{user}` |
+| `POST /v1/me/password` | `{current, next}` | 204 (other devices signed out) |
+| `POST /v1/me/recovery` | `{password}` | `{recoveryCode}` (replaces the old one) |
+| `DELETE /v1/me` | `{password}` | 204 |
+
+## Developers: test it locally
 
 ```sh
 cd server
 npm install
+npm run dev     # http://127.0.0.1:8787 with a local database
+npm test        # signs up, signs in, recovers, deletes — 24 checks
 ```
 
-### 2. Sign in to Cloudflare
-
-```sh
-npx wrangler login
-```
-
-A browser window opens. Allow access, then come back to the terminal.
-
-### 3. Create the database
-
-```sh
-npx wrangler d1 create kinora
-```
-
-It prints a block with `"database_id": "…"`. Copy that id into `wrangler.jsonc`,
-replacing `00000000-0000-0000-0000-000000000000`.
-
-### 4. Create the file storage
-
-```sh
-npx wrangler r2 bucket create kinora-files
-```
-
-If R2 is not enabled on your account yet, the dashboard asks you to enable it once
-(R2 → Overview). The free tier needs a payment method on file, but 10 GB stay free.
-
-### 5. Create the tables
-
-```sh
-npx wrangler d1 migrations apply kinora --remote
-```
-
-### 6. Say which websites may use the API
-
-In `wrangler.jsonc`, `vars.ALLOWED_ORIGINS` lists the addresses Kinora runs from. Add
-your domain, for example:
-
-```jsonc
-"ALLOWED_ORIGINS": "https://kinora.example.com,https://mariongames.github.io,app://kinora,http://localhost:5173"
-```
-
-`app://kinora` is the Windows app. Keep it.
-
-Also set:
-
-- `APP_URL`: the address people open Kinora at. Password-reset links point there.
-- `QUOTA_MB`: cloud storage per account (default 2048 = 2 GB).
-
-### 7. Deploy
-
-```sh
-npx wrangler deploy
-```
-
-It prints the address, for example `https://kinora-api.<your-subdomain>.workers.dev`.
-Check that it works:
-
-```sh
-curl https://kinora-api.<your-subdomain>.workers.dev/v1/health
-# {"ok":true,"service":"kinora-api","version":"1.0.0"}
-```
-
-### 8. Put it on your domain (recommended)
-
-Either:
-
-- in `wrangler.jsonc`, uncomment `routes` and set `"pattern": "api.<your-domain>"`, then
-  run `npx wrangler deploy` again; or
-- in the dashboard, go to Workers & Pages → kinora-api → Settings → Domains & Routes →
-  Add → Custom domain → `api.<your-domain>`.
-
-Cloudflare creates the DNS record and the HTTPS certificate automatically.
-
-### 9. Run the full check against the live API (optional)
-
-```sh
-node test/smoke.mjs https://api.<your-domain>
-```
-
-It creates a throw-away account, backs up a test project, then deletes the account.
-
-### 10. Password-reset emails (optional)
-
-Without this, everything works except "Forgot password?", which tells people that
-reset by email isn't available.
-
-1. Create a free account at <https://resend.com> and verify your domain there (it shows
-   the DNS records to add; in Cloudflare: DNS → Records).
-2. Create an API key in Resend.
-3. Store it as a secret. Secrets are never written in files:
-   ```sh
-   npx wrangler secret put RESEND_API_KEY
-   ```
-4. In `wrangler.jsonc`, set `MAIL_FROM`, for example `"Kinora <no-reply@your-domain>"`,
-   then run `npx wrangler deploy`.
-
-### 11. Connect the app
-
-Send the API address (for example `https://api.your-domain`) to whoever builds Kinora.
-The app reads it from `VITE_KINORA_API` at build time (`.env.production`). Until it is
-set, Kinora hides accounts and works exactly as before.
-
-## Local development
-
-```sh
-npm run db:migrate:local   # once
-npm run dev                # http://127.0.0.1:8787, with a local database and storage
-npm test                   # the end-to-end check against it
-```
-
-To try the app against it, run Kinora with `VITE_KINORA_API=http://127.0.0.1:8787 npm run dev`.
-
-## API
-
-All responses are JSON unless noted. Signed-in calls send `Authorization: Bearer <token>`.
-
-| Method & path | What it does |
-| --- | --- |
-| `GET /v1/health` | Is the service up? |
-| `POST /v1/auth/signup` `{email, password, name, eula}` | Create an account (records the accepted EULA version) → `{token, user}` |
-| `POST /v1/auth/login` `{email, password}` | Sign in → `{token, user}` |
-| `POST /v1/auth/logout` | Sign out this device |
-| `POST /v1/auth/forgot` `{email}` | Email a reset link (needs `RESEND_API_KEY`) |
-| `POST /v1/auth/reset` `{token, password}` | Set a new password from the emailed link → `{token, user}` |
-| `GET /v1/me` | The account and storage used → `{user, usage}` |
-| `PATCH /v1/me` `{name}` | Change the display name |
-| `POST /v1/me/password` `{current, next}` | Change the password (signs other devices out) |
-| `DELETE /v1/me` `{password}` | Delete the account and every backed-up file |
-| `GET /v1/items` | List backed-up projects (including deletion markers) |
-| `GET /v1/items/:id` | Download a project (binary; metadata in `X-Kinora-*` headers) |
-| `PUT /v1/items/:id` | Upload a project (headers `X-Kinora-Kind`, `-Name`, `-Updated`, `-Encoding`, `-Assets`, `-Base`); `409` if another device changed it first |
-| `DELETE /v1/items/:id?base=` | Delete a backed-up project |
-| `POST /v1/media/check` `{ids}` | Which media files still need uploading → `{missing}` |
-| `PUT /v1/media/:id` / `GET /v1/media/:id` | Upload / download one media file (up to 95 MB) |
-
-## Security notes
-
-- Passwords are hashed with PBKDF2-SHA256 (100,000 rounds, the Workers maximum) and a
-  random salt. Session tokens are random 256-bit values; only their SHA-256 hash is stored.
-- Repeated wrong passwords are throttled per email and per IP address.
-- Sessions last 60 days and renew while used. Changing the password signs out every
-  other device.
-- CORS only allows the origins in `ALLOWED_ORIGINS`.
-- Every user's files sit under their own prefix in R2, and every query is limited to the
-  signed-in user.
-- Deleting an account deletes all of its files and rows.
+`node test/smoke.mjs https://kinora-api.<your-name>.workers.dev` runs the same checks
+against the live Worker. It creates a throw-away account and deletes it.

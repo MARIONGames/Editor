@@ -43,7 +43,7 @@ export function DialogHost() {
     case 'glossary':
       return <GlossaryDialog initial={d.term} />;
     case 'account':
-      return <AccountDialog mode={d.mode} resetToken={d.token} />;
+      return <AccountDialog mode={d.mode} />;
     case 'eula':
       return (
         <Dialog
@@ -337,8 +337,8 @@ function SettingsDialog() {
         Show the welcome tour again
       </button>
       <p class="faint">
-        Kinora keeps everything on this device: your projects are saved here and your files are only
-        uploaded if you sign in and turn on cloud backup.
+        Kinora keeps everything on this device: your projects are saved here and your files are
+        never uploaded. An optional account only holds your name, email and password.
       </p>
       <div class="about-block">
         <strong>Kinora {__APP_VERSION__}</strong>

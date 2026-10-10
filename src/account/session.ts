@@ -81,12 +81,14 @@ async function authed<T>(fn: (t: string) => Promise<T>): Promise<T> {
   }
 }
 
-export async function signUp(name: string, email: string, password: string): Promise<void> {
-  const r = await call<Stored>('/v1/auth/signup', {
+/** Creates the account. Returns the recovery code to show once. */
+export async function signUp(name: string, email: string, password: string): Promise<string> {
+  const r = await call<Stored & { recoveryCode: string }>('/v1/auth/signup', {
     method: 'POST',
     json: { name, email, password, eula: EULA_VERSION },
   });
-  setAccount(r);
+  setAccount({ token: r.token, user: r.user });
+  return r.recoveryCode;
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
@@ -102,10 +104,10 @@ export async function signOut(): Promise<void> {
 }
 
 export async function refreshAccount(): Promise<void> {
-  const r = await authed((t) => call<{ user: AccountUser; usage: Usage }>('/v1/me', { token: t }));
+  const r = await authed((t) => call<{ user: AccountUser; usage?: Usage }>('/v1/me', { token: t }));
   const cur = account.peek();
   if (cur) setAccount({ ...cur, user: r.user });
-  usage.value = r.usage;
+  usage.value = r.usage ?? null;
 }
 
 export async function rename(name: string): Promise<void> {
@@ -122,16 +124,33 @@ export async function changePassword(current: string, next: string): Promise<voi
   );
 }
 
-export async function forgotPassword(email: string): Promise<void> {
-  await call('/v1/auth/forgot', { method: 'POST', json: { email } });
+/**
+ * Forgot password: the recovery code saved at sign-up sets a new password (no email
+ * needed). Returns the replacement code (each code works once).
+ */
+export async function recoverAccount(
+  email: string,
+  recoveryCode: string,
+  password: string,
+): Promise<string> {
+  const r = await call<Stored & { recoveryCode: string }>('/v1/auth/recover', {
+    method: 'POST',
+    json: { email, recoveryCode, password },
+  });
+  setAccount({ token: r.token, user: r.user });
+  return r.recoveryCode;
 }
 
-export async function resetPassword(resetToken: string, password: string): Promise<void> {
-  const r = await call<Stored>('/v1/auth/reset', {
-    method: 'POST',
-    json: { token: resetToken, password },
-  });
-  setAccount(r);
+/** Replaces the recovery code (the old one stops working). */
+export async function newRecoveryCode(password: string): Promise<string> {
+  const r = await authed((t) =>
+    call<{ recoveryCode: string }>('/v1/me/recovery', {
+      method: 'POST',
+      token: t,
+      json: { password },
+    }),
+  );
+  return r.recoveryCode;
 }
 
 /** Deletes the account and its cloud backups. Projects on this device stay. */

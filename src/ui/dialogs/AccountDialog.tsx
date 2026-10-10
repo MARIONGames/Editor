@@ -1,21 +1,24 @@
 import { useState } from 'preact/hooks';
 import {
+  Copy,
   CloudOff,
   CloudUpload,
   KeyRound,
+  LifeBuoy,
   LogOut,
   RefreshCw,
   Trash2,
   UserRound,
 } from 'lucide-preact';
 import { ApiError, OfflineError } from '../../account/api';
+import { BACKUP_ENABLED } from '../../account/config';
 import {
   account,
   changePassword,
   deleteAccount,
-  forgotPassword,
+  newRecoveryCode,
+  recoverAccount,
   rename,
-  resetPassword,
   signIn,
   signOut,
   signUp,
@@ -27,33 +30,79 @@ import { Dialog } from '../components/Dialog';
 import { Switch } from '../components/Controls';
 import { closeDialog, openDialog } from './dialogState';
 
-export type AccountMode = 'signin' | 'signup' | 'forgot' | 'reset';
+export type AccountMode = 'signin' | 'signup' | 'recover';
 
 function errorText(err: unknown): string {
   if (err instanceof ApiError || err instanceof OfflineError) return err.message;
   return 'Something went wrong. Please try again.';
 }
 
-function mb(bytes: number): string {
+function size(bytes: number): string {
   if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
   if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`;
   return `${Math.max(0, Math.ceil(bytes / 1024))} KB`;
 }
 
-export function AccountDialog(props: { mode?: AccountMode; resetToken?: string }) {
-  const acc = account.value;
-  if (acc && props.mode !== 'reset') return <AccountView />;
-  return <SignInView initial={props.mode ?? 'signin'} resetToken={props.resetToken} />;
+export function AccountDialog(props: { mode?: AccountMode }) {
+  // A fresh recovery code is shown once, right after sign-up or recovery.
+  const [code, setCode] = useState<string | null>(null);
+  if (code) return <RecoveryCodeView code={code} onDone={closeDialog} />;
+  if (account.value) return <AccountView onCode={setCode} />;
+  return <SignInView initial={props.mode ?? 'signin'} onCode={setCode} />;
 }
 
-function SignInView(props: { initial: AccountMode; resetToken?: string }) {
+/** Shows a recovery code with a copy button. People need it if they forget their password. */
+function RecoveryCodeView(props: { code: string; onDone: () => void }) {
+  const [saved, setSaved] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(props.code);
+      toast('Recovery code copied', 'success');
+    } catch {
+      toast('Couldn’t copy — please write it down.', 'info');
+    }
+  };
+  return (
+    <Dialog
+      title="Save your recovery code"
+      subtitle="If you ever forget your password, this code lets you back in. Nobody else can reset it for you."
+      onClose={props.onDone}
+    >
+      <div class="recovery">
+        <code class="recovery-code" aria-label="Recovery code">
+          {props.code}
+        </code>
+        <button class="btn small" onClick={() => void copy()}>
+          <Copy size={16} /> Copy
+        </button>
+        <p class="faint">
+          Write it down or keep it in a password manager. It works once; you get a new one each time
+          you use it.
+        </p>
+        <label class="eula-check">
+          <input
+            type="checkbox"
+            checked={saved}
+            onChange={(e) => setSaved((e.target as HTMLInputElement).checked)}
+          />
+          <span>I’ve saved my recovery code</span>
+        </label>
+        <button class="btn primary block" disabled={!saved} onClick={props.onDone}>
+          Done
+        </button>
+      </div>
+    </Dialog>
+  );
+}
+
+function SignInView(props: { initial: AccountMode; onCode: (c: string) => void }) {
   const [mode, setMode] = useState<AccountMode>(props.initial);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -62,19 +111,14 @@ function SignInView(props: { initial: AccountMode; resetToken?: string }) {
     try {
       if (mode === 'signin') {
         await signIn(email, password);
-        toast('Signed in. Your projects will be backed up.', 'success');
+        toast('Signed in.', 'success');
         closeDialog();
       } else if (mode === 'signup') {
-        await signUp(name, email, password);
-        toast('Account created. Your projects will be backed up.', 'success');
-        closeDialog();
-      } else if (mode === 'forgot') {
-        await forgotPassword(email);
-        setSent(true);
+        props.onCode(await signUp(name, email, password));
+        toast('Account created.', 'success');
       } else {
-        await resetPassword(props.resetToken ?? '', password);
+        props.onCode(await recoverAccount(email, code, password));
         toast('New password saved. You’re signed in.', 'success');
-        closeDialog();
       }
     } catch (err) {
       setError(errorText(err));
@@ -86,140 +130,135 @@ function SignInView(props: { initial: AccountMode; resetToken?: string }) {
   const title =
     mode === 'signup'
       ? 'Create your Kinora account'
-      : mode === 'forgot'
+      : mode === 'recover'
         ? 'Forgot your password?'
-        : mode === 'reset'
-          ? 'Choose a new password'
-          : 'Sign in to Kinora';
+        : 'Sign in to Kinora';
   return (
     <Dialog
       title={title}
       subtitle="Optional. Kinora works fully without an account, offline too."
       onClose={closeDialog}
     >
-      {mode === 'forgot' && sent ? (
-        <div class="account-sent">
-          <p>
-            If there is an account for {email}, we’ve sent it a link to choose a new password. It
-            works for one hour.
+      <form class="account-form" onSubmit={(e) => void submit(e)}>
+        {mode === 'signup' && (
+          <label class="field">
+            <span class="field-label">Your name</span>
+            <input
+              class="input"
+              autoComplete="name"
+              required
+              maxLength={60}
+              value={name}
+              onInput={(e) => setName((e.target as HTMLInputElement).value)}
+            />
+          </label>
+        )}
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input
+            class="input"
+            type="email"
+            autoComplete="email"
+            required
+            maxLength={254}
+            value={email}
+            onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
+          />
+        </label>
+        {mode === 'recover' && (
+          <label class="field">
+            <span class="field-label">Recovery code</span>
+            <input
+              class="input recovery-input"
+              autoComplete="off"
+              spellcheck={false}
+              required
+              placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
+              maxLength={40}
+              value={code}
+              onInput={(e) => setCode((e.target as HTMLInputElement).value)}
+            />
+            <small class="faint">The code you saved when you created your account.</small>
+          </label>
+        )}
+        <label class="field">
+          <span class="field-label">{mode === 'recover' ? 'New password' : 'Password'}</span>
+          <input
+            class="input"
+            type="password"
+            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+            required
+            minLength={mode === 'signin' ? 1 : 8}
+            maxLength={200}
+            value={password}
+            onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
+          />
+          {mode !== 'signin' && (
+            <small class="faint">
+              At least 8 characters. A short sentence is easy to remember and hard to guess.
+            </small>
+          )}
+        </label>
+        {mode === 'signup' && (
+          <p class="faint account-legal">
+            By creating an account you agree to the{' '}
+            <button type="button" class="link-btn" onClick={() => openDialog({ type: 'eula' })}>
+              License agreement
+            </button>
+            . Your projects stay on this device.
           </p>
-          <button class="btn" onClick={() => setMode('signin')}>
-            Back to sign in
-          </button>
+        )}
+        {error && (
+          <p class="account-error" role="alert">
+            {error}
+          </p>
+        )}
+        <button class="btn primary block" type="submit" disabled={busy}>
+          {busy
+            ? 'One moment…'
+            : mode === 'signup'
+              ? 'Create account'
+              : mode === 'recover'
+                ? 'Set new password'
+                : 'Sign in'}
+        </button>
+        <div class="account-switch">
+          {mode === 'signin' ? (
+            <>
+              <button type="button" class="link-btn" onClick={() => setMode('signup')}>
+                New here? Create an account
+              </button>
+              <button type="button" class="link-btn" onClick={() => setMode('recover')}>
+                Forgot password?
+              </button>
+            </>
+          ) : (
+            <button type="button" class="link-btn" onClick={() => setMode('signin')}>
+              {mode === 'signup' ? 'I already have an account' : 'Back to sign in'}
+            </button>
+          )}
         </div>
-      ) : (
-        <form class="account-form" onSubmit={(e) => void submit(e)}>
-          {mode === 'signup' && (
-            <label class="field">
-              <span class="field-label">Your name</span>
-              <input
-                class="input"
-                autoComplete="name"
-                required
-                maxLength={60}
-                value={name}
-                onInput={(e) => setName((e.target as HTMLInputElement).value)}
-              />
-            </label>
-          )}
-          {mode !== 'reset' && (
-            <label class="field">
-              <span class="field-label">Email</span>
-              <input
-                class="input"
-                type="email"
-                autoComplete="email"
-                required
-                maxLength={254}
-                value={email}
-                onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
-              />
-            </label>
-          )}
-          {mode !== 'forgot' && (
-            <label class="field">
-              <span class="field-label">{mode === 'reset' ? 'New password' : 'Password'}</span>
-              <input
-                class="input"
-                type="password"
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                required
-                minLength={mode === 'signin' ? 1 : 8}
-                maxLength={200}
-                value={password}
-                onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
-              />
-              {mode !== 'signin' && (
-                <small class="faint">
-                  At least 8 characters. A short sentence is easy to remember and hard to guess.
-                </small>
-              )}
-            </label>
-          )}
-          {mode === 'signup' && (
-            <p class="faint account-legal">
-              By creating an account you agree to the{' '}
-              <button type="button" class="link-btn" onClick={() => openDialog({ type: 'eula' })}>
-                License agreement
-              </button>
-              . Your projects on this device are backed up to your account; you can turn this off.
-            </p>
-          )}
-          {error && (
-            <p class="account-error" role="alert">
-              {error}
-            </p>
-          )}
-          <button class="btn primary block" type="submit" disabled={busy}>
-            {busy
-              ? 'One moment…'
-              : mode === 'signup'
-                ? 'Create account'
-                : mode === 'forgot'
-                  ? 'Send me a link'
-                  : mode === 'reset'
-                    ? 'Save new password'
-                    : 'Sign in'}
-          </button>
-          <div class="account-switch">
-            {mode === 'signin' && (
-              <>
-                <button type="button" class="link-btn" onClick={() => setMode('signup')}>
-                  New here? Create an account
-                </button>
-                <button type="button" class="link-btn" onClick={() => setMode('forgot')}>
-                  Forgot password?
-                </button>
-              </>
-            )}
-            {(mode === 'signup' || mode === 'forgot') && (
-              <button type="button" class="link-btn" onClick={() => setMode('signin')}>
-                I already have an account
-              </button>
-            )}
-          </div>
-        </form>
-      )}
+      </form>
     </Dialog>
   );
 }
 
-function AccountView() {
+function AccountView(props: { onCode: (c: string) => void }) {
   const acc = account.value!;
   const st = syncState.value;
   const u = usage.value;
-  const [panel, setPanel] = useState<'none' | 'name' | 'password' | 'delete'>('none');
+  const [panel, setPanel] = useState<'none' | 'name' | 'password' | 'code' | 'delete'>('none');
   const [a, setA] = useState('');
   const [b, setB] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const run = async (fn: () => Promise<void>, done: string) => {
+  const run = async (fn: () => Promise<void>, done?: string) => {
     setBusy(true);
     setError(null);
     try {
       await fn();
-      toast(done, 'success');
+      if (done) toast(done, 'success');
       setPanel('none');
       setA('');
       setB('');
@@ -246,38 +285,48 @@ function AccountView() {
           </span>
           <div class="grow">
             <strong>{acc.user.name}</strong>
-            <span class={`sync-line status-${st.status}`}>
-              {st.status === 'offline' ? <CloudOff size={15} /> : <CloudUpload size={15} />}{' '}
-              {syncLabel(st)}
-            </span>
+            {BACKUP_ENABLED ? (
+              <span class={`sync-line status-${st.status}`}>
+                {st.status === 'offline' ? <CloudOff size={15} /> : <CloudUpload size={15} />}{' '}
+                {syncLabel(st)}
+              </span>
+            ) : (
+              <span class="sync-line">Your projects are saved on this device</span>
+            )}
           </div>
-          <button
-            class="icon-btn"
-            title="Back up now"
-            aria-label="Back up now"
-            disabled={st.status === 'syncing' || !autoBackup.value}
-            onClick={() => void syncNow()}
-          >
-            <RefreshCw size={18} class={st.status === 'syncing' ? 'spin' : ''} />
-          </button>
+          {BACKUP_ENABLED && (
+            <button
+              class="icon-btn"
+              title="Back up now"
+              aria-label="Back up now"
+              disabled={st.status === 'syncing' || !autoBackup.value}
+              onClick={() => void syncNow()}
+            >
+              <RefreshCw size={18} class={st.status === 'syncing' ? 'spin' : ''} />
+            </button>
+          )}
         </div>
-        {st.message && <p class="faint">{st.message}</p>}
-        {u && (
-          <div class="usage">
-            <div class="usage-bar">
-              <span style={{ width: `${Math.min(100, (u.bytes / u.quota) * 100)}%` }} />
-            </div>
-            <span class="faint">
-              {mb(u.bytes)} of {mb(u.quota)} cloud storage used
-            </span>
-          </div>
+        {BACKUP_ENABLED && (
+          <>
+            {st.message && <p class="faint">{st.message}</p>}
+            {u && (
+              <div class="usage">
+                <div class="usage-bar">
+                  <span style={{ width: `${Math.min(100, (u.bytes / u.quota) * 100)}%` }} />
+                </div>
+                <span class="faint">
+                  {size(u.bytes)} of {size(u.quota)} cloud storage used
+                </span>
+              </div>
+            )}
+            <Switch
+              label="Back up automatically"
+              hint="Projects on this device are copied to your account and appear on your other devices. Kinora still saves everything here first and works offline."
+              checked={autoBackup.value}
+              onChange={setAutoBackup}
+            />
+          </>
         )}
-        <Switch
-          label="Back up automatically"
-          hint="Projects on this device are copied to your account and appear on your other devices. Kinora still saves everything here first and works offline."
-          checked={autoBackup.value}
-          onChange={setAutoBackup}
-        />
 
         <div class="account-actions">
           <button class="btn small" onClick={() => open('name')}>
@@ -285,6 +334,9 @@ function AccountView() {
           </button>
           <button class="btn small" onClick={() => open('password')}>
             <KeyRound size={16} /> Change password
+          </button>
+          <button class="btn small" onClick={() => open('code')}>
+            <LifeBuoy size={16} /> New recovery code
           </button>
           <button
             class="btn small"
@@ -351,6 +403,29 @@ function AccountView() {
             </button>
           </form>
         )}
+        {panel === 'code' && (
+          <form
+            class="account-form"
+            onSubmit={(e) => (
+              e.preventDefault(),
+              void run(async () => props.onCode(await newRecoveryCode(a)))
+            )}
+          >
+            <p class="faint">Lost your recovery code? Make a new one; the old one stops working.</p>
+            <input
+              class="input"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Your password"
+              required
+              value={a}
+              onInput={(e) => setA((e.target as HTMLInputElement).value)}
+            />
+            <button class="btn primary small" type="submit" disabled={busy}>
+              Make a new recovery code
+            </button>
+          </form>
+        )}
         {panel === 'delete' && (
           <form
             class="account-form danger-zone"
@@ -363,8 +438,8 @@ function AccountView() {
             )}
           >
             <p>
-              This deletes your account and <strong>everything backed up</strong> to it. Projects on
-              this device are not touched. This can’t be undone.
+              This deletes your account. Projects on this device are not touched. This can’t be
+              undone.
             </p>
             <input
               class="input"

@@ -18,3 +18,10 @@ function readBase(): string {
 
 export const API_BASE = readBase();
 export const accountsEnabled = API_BASE !== '';
+
+/**
+ * Cloud backup of projects. Switched off for everyone: accounts only hold a name, email
+ * and password, and every project stays on the device. (Turning it on needs the backup
+ * endpoints and R2 storage on the server as well.)
+ */
+export const BACKUP_ENABLED = false;

@@ -92,17 +92,17 @@ Build it yourself on Windows with `npm run desktop:dist` (output in `release/`),
 or try it on any OS with `npm run desktop`. The shell lives in `desktop/main.cjs`
 and the packaging settings in `electron-builder.yml`.
 
-## Accounts & cloud backup (optional)
+## Accounts (optional)
 
-Kinora works fully without an account, offline included. With the optional account,
-projects (photo, video and 3D) are backed up and appear on your other devices. The app
-always saves on the device first and syncs in the background when online. If a project
-changed on two devices, both versions are kept.
+Kinora works fully without an account, offline included. The optional account holds a
+name, email and password; projects always stay on the device (cloud backup is switched
+off). Forgotten passwords are reset with a recovery code shown at sign-up, so no email
+service is needed.
 
-The backend is a Cloudflare Worker with D1 and R2 in [`server/`](server/). Its
-[README](server/README.md) has step-by-step setup instructions. Point the app at it with
-`VITE_KINORA_API` (see `.env.example`, or the `KINORA_API` repository variable for the
-GitHub builds). Without it, accounts are hidden.
+The backend is one Cloudflare Worker file with a D1 database:
+[`server/worker.js`](server/worker.js). [server/README.md](server/README.md) explains the
+setup step by step in the Cloudflare dashboard. Point the app at it with
+`VITE_KINORA_API` (see `.env.example`). Without it, the Sign in button is hidden.
 
 ## Browser support
 
@@ -127,11 +127,11 @@ src/
   coach/     tour, checklist, next-step suggestions
   ui/        home screen, editor, timeline, panels, dialogs
   studio3d/  the 3D studio (model, engine, state, UI, import/export)
-  account/   optional sign-in and offline-first cloud sync
+  account/   optional sign-in (cloud sync code is present but switched off)
   legal/     license agreement, copyright and third-party notices
   i18n/      every tool name/explanation and the glossary
 desktop/     Electron shell for the Windows/macOS/Linux app
-server/      optional accounts & cloud backup (Cloudflare Worker + D1 + R2)
+server/      optional accounts (one Cloudflare Worker file + a D1 database)
 tests/       unit (Vitest) and end-to-end (Playwright) tests
 docs/        product, architecture and plan
 ```
