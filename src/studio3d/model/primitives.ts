@@ -6,7 +6,17 @@
 import { makeMesh } from './mesh';
 import type { MeshData } from './types';
 
-export type PrimitiveKind = 'cube' | 'sphere' | 'icosphere' | 'cylinder' | 'cone' | 'torus' | 'plane' | 'grid' | 'capsule' | 'pyramid';
+export type PrimitiveKind =
+  | 'cube'
+  | 'sphere'
+  | 'icosphere'
+  | 'cylinder'
+  | 'cone'
+  | 'torus'
+  | 'plane'
+  | 'grid'
+  | 'capsule'
+  | 'pyramid';
 
 export function cube(size = 2): MeshData {
   const h = size / 2;
@@ -20,7 +30,11 @@ export function cube(size = 2): MeshData {
     [0, 1, 5, 4], // -Y
   ];
   const quadUv = [0, 0, 1, 0, 1, 1, 0, 1];
-  return makeMesh(v, faces, faces.map(() => quadUv.slice()));
+  return makeMesh(
+    v,
+    faces,
+    faces.map(() => quadUv.slice()),
+  );
 }
 
 export function grid(size = 2, cuts = 1): MeshData {
@@ -47,7 +61,12 @@ export const plane = (size = 2): MeshData => grid(size, 1);
  * Spins a profile (radius, height) pairs — listed top to bottom — around the Y axis.
  * Points with radius 0 become poles; open ends can be closed with n-gon caps.
  */
-export function lathe(profile: [number, number][], segments: number, capTop = false, capBottom = false): MeshData {
+export function lathe(
+  profile: [number, number][],
+  segments: number,
+  capTop = false,
+  capBottom = false,
+): MeshData {
   const S = Math.max(3, Math.round(segments));
   const v: number[] = [];
   const faces: number[][] = [];
@@ -93,7 +112,8 @@ export function lathe(profile: [number, number][], segments: number, capTop = fa
   const capUv = (row: number[], r: number, reverse: boolean) => {
     const order = reverse ? row.slice().reverse() : row;
     const uv: number[] = [];
-    for (const i of order) uv.push(0.5 + v[i * 3]! / (2 * r), 0.5 - v[i * 3 + 2]! / (2 * r) * (reverse ? -1 : 1));
+    for (const i of order)
+      uv.push(0.5 + v[i * 3]! / (2 * r), 0.5 - (v[i * 3 + 2]! / (2 * r)) * (reverse ? -1 : 1));
     return { order, uv };
   };
   if (capTop && rows[0]!.length > 1) {
@@ -187,12 +207,65 @@ export function torus(major = 1, minor = 0.25, majorSegments = 48, minorSegments
 
 export function icoSphere(radius = 1, detail = 2): MeshData {
   const t = (1 + Math.sqrt(5)) / 2;
-  let v: number[] = [-1, t, 0, 1, t, 0, -1, -t, 0, 1, -t, 0, 0, -1, t, 0, 1, t, 0, -1, -t, 0, 1, -t, t, 0, -1, t, 0, 1, -t, 0, -1, -t, 0, 1];
+  let v: number[] = [
+    -1,
+    t,
+    0,
+    1,
+    t,
+    0,
+    -1,
+    -t,
+    0,
+    1,
+    -t,
+    0,
+    0,
+    -1,
+    t,
+    0,
+    1,
+    t,
+    0,
+    -1,
+    -t,
+    0,
+    1,
+    -t,
+    t,
+    0,
+    -1,
+    t,
+    0,
+    1,
+    -t,
+    0,
+    -1,
+    -t,
+    0,
+    1,
+  ];
   let faces = [
-    [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
-    [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
-    [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
-    [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1],
+    [0, 11, 5],
+    [0, 5, 1],
+    [0, 1, 7],
+    [0, 7, 10],
+    [0, 10, 11],
+    [1, 5, 9],
+    [5, 11, 4],
+    [11, 10, 2],
+    [10, 7, 6],
+    [7, 1, 8],
+    [3, 9, 4],
+    [3, 4, 2],
+    [3, 2, 6],
+    [3, 6, 8],
+    [3, 8, 9],
+    [4, 9, 5],
+    [2, 4, 11],
+    [6, 2, 10],
+    [8, 6, 7],
+    [9, 8, 1],
   ];
   for (let d = 0; d < Math.min(5, Math.max(0, Math.round(detail))); d++) {
     const mid = new Map<string, number>();
@@ -201,7 +274,11 @@ export function icoSphere(radius = 1, detail = 2): MeshData {
       let m = mid.get(k);
       if (m === undefined) {
         m = v.length / 3;
-        v.push((v[a * 3]! + v[b * 3]!) / 2, (v[a * 3 + 1]! + v[b * 3 + 1]!) / 2, (v[a * 3 + 2]! + v[b * 3 + 2]!) / 2);
+        v.push(
+          (v[a * 3]! + v[b * 3]!) / 2,
+          (v[a * 3 + 1]! + v[b * 3 + 1]!) / 2,
+          (v[a * 3 + 2]! + v[b * 3 + 2]!) / 2,
+        );
         mid.set(k, m);
       }
       return m;

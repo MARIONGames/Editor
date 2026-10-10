@@ -41,7 +41,12 @@ export const PRIMITIVE_NAMES: Record<PrimitiveKind, string> = {
   pyramid: 'Pyramid',
 };
 
-export function meshObject(name: string, mesh: MeshData, materials: ID[] = [], t: Transform3 = identity()): MeshObj {
+export function meshObject(
+  name: string,
+  mesh: MeshData,
+  materials: ID[] = [],
+  t: Transform3 = identity(),
+): MeshObj {
   return {
     id: uid('o'),
     kind: 'mesh',
@@ -60,7 +65,12 @@ export function meshObject(name: string, mesh: MeshData, materials: ID[] = [], t
   };
 }
 
-export const LIGHT_NAMES: Record<LightKind, string> = { sun: 'Sun', point: 'Point light', spot: 'Spotlight', area: 'Area light' };
+export const LIGHT_NAMES: Record<LightKind, string> = {
+  sun: 'Sun',
+  point: 'Point light',
+  spot: 'Spotlight',
+  area: 'Area light',
+};
 
 export function lightObject(type: LightKind, t: Transform3 = identity()): LightObj {
   const intensity = type === 'sun' ? 3 : type === 'point' ? 300 : type === 'spot' ? 800 : 12;
@@ -72,20 +82,57 @@ export function lightObject(type: LightKind, t: Transform3 = identity()): LightO
     t,
     visible: true,
     locked: false,
-    light: { type, color: '#ffffff', intensity, range: 0, angle: 35, softness: 0.3, size: [1, 1], shadow: type !== 'area' },
+    light: {
+      type,
+      color: '#ffffff',
+      intensity,
+      range: 0,
+      angle: 35,
+      softness: 0.3,
+      size: [1, 1],
+      shadow: type !== 'area',
+    },
   };
 }
 
 export function cameraObject(t: Transform3 = identity()): CameraObj {
-  return { id: uid('o'), kind: 'camera', name: 'Camera', parent: null, t, visible: true, locked: false, camera: { fov: 40, near: 0.05, far: 500 } };
+  return {
+    id: uid('o'),
+    kind: 'camera',
+    name: 'Camera',
+    parent: null,
+    t,
+    visible: true,
+    locked: false,
+    camera: { fov: 40, near: 0.05, far: 500 },
+  };
 }
 
 export function emptyObject(name = 'Empty', t: Transform3 = identity()): EmptyObj {
-  return { id: uid('o'), kind: 'empty', name, parent: null, t, visible: true, locked: false, size: 1 };
+  return {
+    id: uid('o'),
+    kind: 'empty',
+    name,
+    parent: null,
+    t,
+    visible: true,
+    locked: false,
+    size: 1,
+  };
 }
 
 export function modelObject(assetId: ID, name: string, t: Transform3 = identity()): ModelObj {
-  return { id: uid('o'), kind: 'model', name, parent: null, t, visible: true, locked: false, assetId, clip: { name: null, speed: 1, loop: true, offset: 0 } };
+  return {
+    id: uid('o'),
+    kind: 'model',
+    name,
+    parent: null,
+    t,
+    visible: true,
+    locked: false,
+    assetId,
+    clip: { name: null, speed: 1, loop: true, offset: 0 },
+  };
 }
 
 /** A transform at `from` looking at `to` (cameras, spotlights, suns point down their -Z axis). */
@@ -107,8 +154,25 @@ export function createScene(name: string): Scene3D {
     materials: {},
     textures: {},
     assets: {},
-    world: { env: 'studio', hdri: null, envIntensity: 1, envRotation: 0, background: 'blur', color: '#20222b', floorShadow: true },
-    render: { width: 1920, height: 1080, fps: 30, exposure: 1, tone: 'agx', shadows: true, camera: null, transparent: false },
+    world: {
+      env: 'studio',
+      hdri: null,
+      envIntensity: 1,
+      envRotation: 0,
+      background: 'blur',
+      color: '#20222b',
+      floorShadow: true,
+    },
+    render: {
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      exposure: 1,
+      tone: 'agx',
+      shadows: true,
+      camera: null,
+      transparent: false,
+    },
     anim: { start: 0, end: 5 },
     createdAt: now,
     updatedAt: now,
@@ -121,7 +185,8 @@ export function starterScene(name: string, withCube = true): Scene3D {
   const clay = presetMaterial('clay', 'Clay');
   s = addMaterial(s, clay);
   const objs: Obj3D[] = [];
-  if (withCube) objs.push(meshObject('Cube', cube(), [clay.id], { p: [0, 1, 0], r: [0, 0, 0], s: [1, 1, 1] }));
+  if (withCube)
+    objs.push(meshObject('Cube', cube(), [clay.id], { p: [0, 1, 0], r: [0, 0, 0], s: [1, 1, 1] }));
   const sun = lightObject('sun', lookAtTransform([4, 8, 3], [0, 0, 0]));
   const cam = cameraObject(lookAtTransform([7, 5, 9], [0, 1, 0]));
   objs.push(sun, cam);
@@ -204,7 +269,11 @@ export function outlinerRows(scene: Scene3D): { id: ID; depth: number }[] {
 /* --------------------------------------------------------------- transforms */
 
 export function matrixOf(t: Transform3): Matrix4 {
-  return new Matrix4().compose(new Vector3(...t.p), new Quaternion().setFromEuler(new Euler(t.r[0], t.r[1], t.r[2], 'XYZ')), new Vector3(...t.s));
+  return new Matrix4().compose(
+    new Vector3(...t.p),
+    new Quaternion().setFromEuler(new Euler(t.r[0], t.r[1], t.r[2], 'XYZ')),
+    new Vector3(...t.s),
+  );
 }
 
 export function transformOf(m: Matrix4): Transform3 {
@@ -214,7 +283,11 @@ export function transformOf(m: Matrix4): Transform3 {
   m.decompose(p, q, s);
   const e = new Euler().setFromQuaternion(q, 'XYZ');
   const clean = (x: number) => (Math.abs(x) < 1e-9 ? 0 : x);
-  return { p: [clean(p.x), clean(p.y), clean(p.z)], r: [clean(e.x), clean(e.y), clean(e.z)], s: [s.x, s.y, s.z] };
+  return {
+    p: [clean(p.x), clean(p.y), clean(p.z)],
+    r: [clean(e.x), clean(e.y), clean(e.z)],
+    s: [s.x, s.y, s.z],
+  };
 }
 
 /** World matrix of an object at time t (animation and parents included). */
@@ -222,7 +295,9 @@ export function worldMatrix(scene: Scene3D, id: ID, t = 0): Matrix4 {
   const o = scene.objects[id];
   if (!o) return new Matrix4();
   const local = matrixOf(transformAt(o, t));
-  return o.parent && scene.objects[o.parent] ? worldMatrix(scene, o.parent, t).multiply(local) : local;
+  return o.parent && scene.objects[o.parent]
+    ? worldMatrix(scene, o.parent, t).multiply(local)
+    : local;
 }
 
 /** Sets an object's transform so that its world matrix becomes `world`. */
@@ -237,7 +312,13 @@ export function localFromWorld(scene: Scene3D, id: ID, world: Matrix4, t = 0): T
  * Changes an object's transform at time t. Properties that are already animated (or
  * all of them when auto-key is on) get a keyframe; the rest change directly.
  */
-export function setTransformAt(scene: Scene3D, id: ID, next: Transform3, t: number, autoKey: boolean): Scene3D {
+export function setTransformAt(
+  scene: Scene3D,
+  id: ID,
+  next: Transform3,
+  t: number,
+  autoKey: boolean,
+): Scene3D {
   return updateObject(scene, id, (o) => {
     const anim: AnimChannels = { ...(o.anim ?? {}) };
     const base = { ...o.t };
@@ -257,7 +338,12 @@ export function setTransformAt(scene: Scene3D, id: ID, next: Transform3, t: numb
 }
 
 /** Inserts keyframes for the object's current pose at time t (I). */
-export function keyObject(scene: Scene3D, id: ID, t: number, channels: readonly ('p' | 'r' | 's')[] = ['p', 'r', 's']): Scene3D {
+export function keyObject(
+  scene: Scene3D,
+  id: ID,
+  t: number,
+  channels: readonly ('p' | 'r' | 's')[] = ['p', 'r', 's'],
+): Scene3D {
   return updateObject(scene, id, (o) => {
     const pose = transformAt(o, t);
     const anim: AnimChannels = { ...(o.anim ?? {}) };
@@ -324,7 +410,11 @@ export function removeObjects(scene: Scene3D, ids: ID[]): Scene3D {
  * Copies objects (Shift+D). A linked duplicate (Alt+D) shares the mesh data, so editing
  * one edits both — exactly how instanced props work in games.
  */
-export function duplicateObjects(scene: Scene3D, ids: ID[], linked = false): { scene: Scene3D; ids: ID[] } {
+export function duplicateObjects(
+  scene: Scene3D,
+  ids: ID[],
+  linked = false,
+): { scene: Scene3D; ids: ID[] } {
   const map = new Map<ID, ID>();
   const all = new Set<ID>();
   for (const id of ids) {
@@ -340,7 +430,11 @@ export function duplicateObjects(scene: Scene3D, ids: ID[], linked = false): { s
     let copy: Obj3D;
     if (o.kind === 'mesh') {
       const { mesh, ...rest } = o;
-      copy = { ...structuredClone(rest), kind: 'mesh', mesh: linked ? mesh : { ...mesh, v: mesh.v.slice() } };
+      copy = {
+        ...structuredClone(rest),
+        kind: 'mesh',
+        mesh: linked ? mesh : { ...mesh, v: mesh.v.slice() },
+      };
     } else copy = structuredClone(o);
     copies.push({ ...copy, id: nid });
   }
@@ -394,8 +488,10 @@ export function setOrigin(scene: Scene3D, id: ID, mode: OriginMode): Scene3D {
   if (!o || o.kind !== 'mesh' || !o.mesh.v.length) return scene;
   const b = bounds(o.mesh);
   let local: Vec3;
-  if (mode === 'geometry') local = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2];
-  else if (mode === 'bottom') local = [(b.min[0] + b.max[0]) / 2, b.min[1], (b.min[2] + b.max[2]) / 2];
+  if (mode === 'geometry')
+    local = [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2, (b.min[2] + b.max[2]) / 2];
+  else if (mode === 'bottom')
+    local = [(b.min[0] + b.max[0]) / 2, b.min[1], (b.min[2] + b.max[2]) / 2];
   else {
     const inv = matrixOf(o.t).invert();
     const w = new Vector3(0, 0, 0).applyMatrix4(inv);
@@ -408,7 +504,10 @@ export function setOrigin(scene: Scene3D, id: ID, mode: OriginMode): Scene3D {
     v[i + 2]! -= local[2];
   }
   const wp = new Vector3(...local).applyMatrix4(matrixOf(o.t));
-  return patchObject<MeshObj>(scene, id, { mesh: { ...o.mesh, v }, t: { ...o.t, p: [wp.x, wp.y, wp.z] } });
+  return patchObject<MeshObj>(scene, id, {
+    mesh: { ...o.mesh, v },
+    t: { ...o.t, p: [wp.x, wp.y, wp.z] },
+  });
 }
 
 /** Joins meshes into `target` (Ctrl+J), keeping where everything is in the world. */
@@ -453,14 +552,22 @@ export function joinMeshes(scene: Scene3D, ids: ID[], target: ID): Scene3D {
     });
   }
   if (!others.length) return scene;
-  const s = patchObject<MeshObj>(scene, target, { mesh: fromWork(w, { dropLoose: false }), materials });
+  const s = patchObject<MeshObj>(scene, target, {
+    mesh: fromWork(w, { dropLoose: false }),
+    materials,
+  });
   return removeObjects(s, others);
 }
 
 /** Moves the given faces into a new object (P → Selection). */
-export function separateFaces(scene: Scene3D, id: ID, faces: Set<number>): { scene: Scene3D; id: ID | null } {
+export function separateFaces(
+  scene: Scene3D,
+  id: ID,
+  faces: Set<number>,
+): { scene: Scene3D; id: ID | null } {
   const o = scene.objects[id];
-  if (!o || o.kind !== 'mesh' || !faces.size || faces.size === o.mesh.fs.length) return { scene, id: null };
+  if (!o || o.kind !== 'mesh' || !faces.size || faces.size === o.mesh.fs.length)
+    return { scene, id: null };
   const w = toWork(o.mesh);
   const keep: Work = { v: w.v, faces: [], uvs: [], mats: [] };
   const part: Work = { v: w.v.slice(), faces: [], uvs: [], mats: [] };
@@ -472,7 +579,15 @@ export function separateFaces(scene: Scene3D, id: ID, faces: Set<number>): { sce
   });
   const copy = meshObject(`${o.name} part`, fromWork(part), o.materials.slice(), { ...o.t });
   let s = patchObject<MeshObj>(scene, id, { mesh: fromWork(keep) });
-  s = addObjects(s, [{ ...copy, parent: o.parent, modifiers: structuredClone(o.modifiers), shade: o.shade, smoothAngle: o.smoothAngle }]);
+  s = addObjects(s, [
+    {
+      ...copy,
+      parent: o.parent,
+      modifiers: structuredClone(o.modifiers),
+      shade: o.shade,
+      smoothAngle: o.smoothAngle,
+    },
+  ]);
   return { scene: s, id: copy.id };
 }
 
@@ -516,13 +631,19 @@ export function assignMaterial(scene: Scene3D, objId: ID, matId: ID, faces?: Set
 /** Materials no object uses any more. */
 export function unusedMaterials(scene: Scene3D): ID[] {
   const used = new Set<ID>();
-  for (const o of Object.values(scene.objects)) if (o.kind === 'mesh') for (const m of o.materials) used.add(m);
+  for (const o of Object.values(scene.objects))
+    if (o.kind === 'mesh') for (const m of o.materials) used.add(m);
   return Object.keys(scene.materials).filter((id) => !used.has(id));
 }
 
 /* ----------------------------------------------------------------- creation */
 
-export function addPrimitive(scene: Scene3D, kind: PrimitiveKind, at: Vec3, matId?: ID): { scene: Scene3D; id: ID } {
+export function addPrimitive(
+  scene: Scene3D,
+  kind: PrimitiveKind,
+  at: Vec3,
+  matId?: ID,
+): { scene: Scene3D; id: ID } {
   let s = scene;
   let mat = matId;
   if (!mat) {
@@ -538,12 +659,20 @@ export function addPrimitive(scene: Scene3D, kind: PrimitiveKind, at: Vec3, matI
   // Sit on the floor rather than half under it.
   const b = bounds(mesh);
   const lift = kind === 'plane' || kind === 'grid' ? 0 : -b.min[1];
-  const o = meshObject(PRIMITIVE_NAMES[kind], mesh, [mat], { p: [at[0], at[1] + lift, at[2]], r: [0, 0, 0], s: [1, 1, 1] });
+  const o = meshObject(PRIMITIVE_NAMES[kind], mesh, [mat], {
+    p: [at[0], at[1] + lift, at[2]],
+    r: [0, 0, 0],
+    s: [1, 1, 1],
+  });
   return { scene: addObjects(s, [o]), id: o.id };
 }
 
 /** Axis-aligned world bounds of every visible mesh (null when there are none). */
-export function sceneBounds(scene: Scene3D, ids?: ID[], t = 0): { min: Vector3; max: Vector3 } | null {
+export function sceneBounds(
+  scene: Scene3D,
+  ids?: ID[],
+  t = 0,
+): { min: Vector3; max: Vector3 } | null {
   const min = new Vector3(Infinity, Infinity, Infinity);
   const max = new Vector3(-Infinity, -Infinity, -Infinity);
   const p = new Vector3();
@@ -555,7 +684,11 @@ export function sceneBounds(scene: Scene3D, ids?: ID[], t = 0): { min: Vector3; 
     if (o.kind === 'mesh' && o.mesh.v.length) {
       const b = bounds(o.mesh);
       for (let i = 0; i < 8; i++) {
-        p.set(i & 1 ? b.max[0] : b.min[0], i & 2 ? b.max[1] : b.min[1], i & 4 ? b.max[2] : b.min[2]).applyMatrix4(m);
+        p.set(
+          i & 1 ? b.max[0] : b.min[0],
+          i & 2 ? b.max[1] : b.min[1],
+          i & 4 ? b.max[2] : b.min[2],
+        ).applyMatrix4(m);
         min.min(p);
         max.max(p);
         any = true;
@@ -580,4 +713,3 @@ export function facesBySlot(o: MeshObj): number[][] {
   }
   return out;
 }
-

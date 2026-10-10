@@ -24,7 +24,8 @@ function subdivideOnce(m: MeshData): MeshData {
   const fp = new Float64Array(nf * 3);
   for (let fi = 0; fi < nf; fi++) {
     const n = m.fs[fi]!;
-    for (let c = o[fi]!; c < o[fi + 1]!; c++) for (let k = 0; k < 3; k++) fp[fi * 3 + k]! += V[m.f[c]! * 3 + k]! / n;
+    for (let c = o[fi]!; c < o[fi + 1]!; c++)
+      for (let k = 0; k < 3; k++) fp[fi * 3 + k]! += V[m.f[c]! * 3 + k]! / n;
   }
   // Edge points.
   const ep = new Float64Array(ne * 3);
@@ -35,7 +36,9 @@ function subdivideOnce(m: MeshData): MeshData {
     const b = k % 2 ** 24;
     const fs = et.faces[ei]!;
     if (fs.length === 2) {
-      for (let c = 0; c < 3; c++) ep[ei * 3 + c] = (V[a * 3 + c]! + V[b * 3 + c]! + fp[fs[0]! * 3 + c]! + fp[fs[1]! * 3 + c]!) / 4;
+      for (let c = 0; c < 3; c++)
+        ep[ei * 3 + c] =
+          (V[a * 3 + c]! + V[b * 3 + c]! + fp[fs[0]! * 3 + c]! + fp[fs[1]! * 3 + c]!) / 4;
     } else {
       boundary[ei] = 1;
       for (let c = 0; c < 3; c++) ep[ei * 3 + c] = (V[a * 3 + c]! + V[b * 3 + c]!) / 2;
@@ -99,10 +102,11 @@ function subdivideOnce(m: MeshData): MeshData {
     const n = m.fs[fi]!;
     let cu = 0;
     let cv = 0;
-    if (uv) for (let c = 0; c < n; c++) {
-      cu += m.uv![(s + c) * 2]! / n;
-      cv += m.uv![(s + c) * 2 + 1]! / n;
-    }
+    if (uv)
+      for (let c = 0; c < n; c++) {
+        cu += m.uv![(s + c) * 2]! / n;
+        cv += m.uv![(s + c) * 2 + 1]! / n;
+      }
     for (let c = 0; c < n; c++) {
       const cp = (c + n - 1) % n;
       const cn = (c + 1) % n;
@@ -115,7 +119,8 @@ function subdivideOnce(m: MeshData): MeshData {
       f[q * 4 + 3] = nv + et.index.get(edgeKey(vPrev, v))!;
       if (uv) {
         const U = m.uv!;
-        const u0 = U[(s + c) * 2]!, v0 = U[(s + c) * 2 + 1]!;
+        const u0 = U[(s + c) * 2]!,
+          v0 = U[(s + c) * 2 + 1]!;
         uv[q * 8] = u0;
         uv[q * 8 + 1] = v0;
         uv[q * 8 + 2] = (u0 + U[(s + cn) * 2]!) / 2;

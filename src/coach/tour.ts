@@ -29,6 +29,8 @@ const hasMedia = (): boolean => {
 export interface TourState {
   steps: TourStep[];
   index: number;
+  /** Which "done" flag finishing it sets. */
+  flag?: 'tourDone' | 'tour3dDone';
 }
 
 export const tour = signal<TourState | null>(null);
@@ -139,7 +141,13 @@ const PHOTO_TOUR: TourStep[] = [
 let unsub: (() => void) | null = null;
 
 export function startTour(kind: 'video' | 'photo'): void {
-  tour.value = { steps: kind === 'photo' ? PHOTO_TOUR : VIDEO_TOUR, index: 0 };
+  tour.value = { steps: kind === 'photo' ? PHOTO_TOUR : VIDEO_TOUR, index: 0, flag: 'tourDone' };
+  listen();
+}
+
+/** Starts a tour defined elsewhere (the 3D studio brings its own steps). */
+export function startCustomTour(steps: TourStep[], flag: TourState['flag']): void {
+  tour.value = { steps, index: 0, flag };
   listen();
 }
 
@@ -166,8 +174,9 @@ export function advance(): void {
 }
 
 export function endTour(): void {
+  const flag = tour.peek()?.flag ?? 'tourDone';
   tour.value = null;
   unsub?.();
   unsub = null;
-  updateSettings({ tourDone: true });
+  updateSettings({ [flag]: true });
 }

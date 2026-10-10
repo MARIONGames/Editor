@@ -28,7 +28,11 @@ export interface MeshSelection {
   faces: Set<number>;
 }
 
-export const emptySelection = (): MeshSelection => ({ verts: new Set(), edges: new Set(), faces: new Set() });
+export const emptySelection = (): MeshSelection => ({
+  verts: new Set(),
+  edges: new Set(),
+  faces: new Set(),
+});
 
 /* --------------------------------------------------------------- selection */
 
@@ -60,7 +64,8 @@ export function selectionFromEdges(m: MeshData, edges: Set<number>): MeshSelecti
   for (const fi of s.faces) {
     const n = m.fs[fi]!;
     let all = true;
-    for (let c = 0; c < n; c++) if (!edges.has(edgeKey(m.f[o[fi]! + c]!, m.f[o[fi]! + ((c + 1) % n)]!))) all = false;
+    for (let c = 0; c < n; c++)
+      if (!edges.has(edgeKey(m.f[o[fi]! + c]!, m.f[o[fi]! + ((c + 1) % n)]!))) all = false;
     if (all) faces.add(fi);
   }
   return { verts, edges: new Set(edges), faces };
@@ -181,7 +186,9 @@ export function edgeLoop(m: MeshData, start: number): Set<number> {
       if (around.length !== 4) return;
       const facesOfPrev = new Set(et.faces[et.index.get(prevEdge)!]);
       // The continuing edge shares no face with the edge we came along.
-      const next = around.find((e) => e !== prevEdge && !et.faces[et.index.get(e)!]!.some((f) => facesOfPrev.has(f)));
+      const next = around.find(
+        (e) => e !== prevEdge && !et.faces[et.index.get(e)!]!.some((f) => facesOfPrev.has(f)),
+      );
       if (next === undefined || loop.has(next)) return;
       loop.add(next);
       const [a, b] = edgeEnds(next);
@@ -198,10 +205,16 @@ export function edgeLoop(m: MeshData, start: number): Set<number> {
 /* --------------------------------------------------------------- transforms */
 
 /** Applies a 4×4 column-major matrix to the given vertices. */
-export function transformVerts(m: MeshData, verts: Iterable<number>, mat: ArrayLike<number>): MeshData {
+export function transformVerts(
+  m: MeshData,
+  verts: Iterable<number>,
+  mat: ArrayLike<number>,
+): MeshData {
   const v = m.v.slice();
   for (const i of verts) {
-    const x = m.v[i * 3]!, y = m.v[i * 3 + 1]!, z = m.v[i * 3 + 2]!;
+    const x = m.v[i * 3]!,
+      y = m.v[i * 3 + 1]!,
+      z = m.v[i * 3 + 2]!;
     v[i * 3] = mat[0]! * x + mat[4]! * y + mat[8]! * z + mat[12]!;
     v[i * 3 + 1] = mat[1]! * x + mat[5]! * y + mat[9]! * z + mat[13]!;
     v[i * 3 + 2] = mat[2]! * x + mat[6]! * y + mat[10]! * z + mat[14]!;
@@ -209,12 +222,19 @@ export function transformVerts(m: MeshData, verts: Iterable<number>, mat: ArrayL
   return { ...m, v };
 }
 
-export function translateVerts(m: MeshData, verts: Iterable<number>, d: [number, number, number]): MeshData {
+export function translateVerts(
+  m: MeshData,
+  verts: Iterable<number>,
+  d: [number, number, number],
+): MeshData {
   return transformVerts(m, verts, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, d[0], d[1], d[2], 1]);
 }
 
 /** Center of the selected vertices (median point). */
-export function selectionCenter(m: MeshData, verts: Iterable<number>): [number, number, number] | null {
+export function selectionCenter(
+  m: MeshData,
+  verts: Iterable<number>,
+): [number, number, number] | null {
   let n = 0;
   const c: [number, number, number] = [0, 0, 0];
   for (const i of verts) {
@@ -234,7 +254,8 @@ export function selectionNormal(m: MeshData, sel: MeshSelection): [number, numbe
   if (!faces.size) {
     const vf = vertexFaces(m);
     faces = new Set();
-    for (const v of sel.verts) for (let k = vf.start[v]!; k < vf.start[v + 1]!; k++) faces.add(vf.faces[k]!);
+    for (const v of sel.verts)
+      for (let k = vf.start[v]!; k < vf.start[v + 1]!; k++) faces.add(vf.faces[k]!);
   }
   const n: [number, number, number] = [0, 0, 0];
   const t = [0, 0, 0];
@@ -309,7 +330,11 @@ export function extrudeFaces(m: MeshData, faces: Set<number>, distance = 0): OpR
     let n = dup.get(v);
     if (n === undefined) {
       n = w.v.length / 3;
-      w.v.push(w.v[v * 3]! + dir[0] * distance, w.v[v * 3 + 1]! + dir[1] * distance, w.v[v * 3 + 2]! + dir[2] * distance);
+      w.v.push(
+        w.v[v * 3]! + dir[0] * distance,
+        w.v[v * 3 + 1]! + dir[1] * distance,
+        w.v[v * 3 + 2]! + dir[2] * distance,
+      );
       dup.set(v, n);
     }
     return n;
@@ -332,7 +357,11 @@ export function extrudeFaces(m: MeshData, faces: Set<number>, distance = 0): OpR
 }
 
 /** Extrudes edges (E in edge mode): each edge grows a new face, the new edges are selected. */
-export function extrudeEdges(m: MeshData, edges: Set<number>, offset: [number, number, number] = [0, 0, 0]): OpResult {
+export function extrudeEdges(
+  m: MeshData,
+  edges: Set<number>,
+  offset: [number, number, number] = [0, 0, 0],
+): OpResult {
   if (!edges.size) return { mesh: m, sel: emptySelection() };
   const w = toWork(m);
   const et = edgeTable(m);
@@ -373,7 +402,12 @@ export function extrudeEdges(m: MeshData, edges: Set<number>, offset: [number, n
 /* -------------------------------------------------------------------- inset */
 
 /** Insets each face (I): a smaller copy inside it, joined by a ring of quads. */
-export function insetFaces(m: MeshData, faces: Set<number>, thickness: number, depth = 0): OpResult {
+export function insetFaces(
+  m: MeshData,
+  faces: Set<number>,
+  thickness: number,
+  depth = 0,
+): OpResult {
   if (!faces.size) return { mesh: m, sel: emptySelection() };
   const w = toWork(m);
   const nrm = [0, 0, 0];
@@ -407,19 +441,39 @@ export function insetFaces(m: MeshData, faces: Set<number>, thickness: number, d
       if (!Number.isFinite(bis[0]!)) bis = inNext;
       const cos = Math.max(0.2, dot(bis, inNext));
       const dist = thickness / cos;
-      const q = [p[0] + bis[0]! * dist + nrm[0]! * depth, p[1] + bis[1]! * dist + nrm[1]! * depth, p[2] + bis[2]! * dist + nrm[2]! * depth];
+      const q = [
+        p[0] + bis[0]! * dist + nrm[0]! * depth,
+        p[1] + bis[1]! * dist + nrm[1]! * depth,
+        p[2] + bis[2]! * dist + nrm[2]! * depth,
+      ];
       inner.push(w.v.length / 3);
       w.v.push(q[0]!, q[1]!, q[2]!);
       if (uv) {
         const toCenter = Math.hypot(center[0]! - p[0], center[1]! - p[1], center[2]! - p[2]) || 1;
         const t = Math.min(0.95, dist / toCenter);
-        innerUv.push(uv[c * 2]! + (cu - uv[c * 2]!) * t, uv[c * 2 + 1]! + (cv - uv[c * 2 + 1]!) * t);
+        innerUv.push(
+          uv[c * 2]! + (cu - uv[c * 2]!) * t,
+          uv[c * 2 + 1]! + (cv - uv[c * 2 + 1]!) * t,
+        );
       }
     }
     for (let c = 0; c < n; c++) {
       const c1 = (c + 1) % n;
       w.faces.push([f[c]!, f[c1]!, inner[c1]!, inner[c]!]);
-      w.uvs.push(uv ? [uv[c * 2]!, uv[c * 2 + 1]!, uv[c1 * 2]!, uv[c1 * 2 + 1]!, innerUv[c1 * 2]!, innerUv[c1 * 2 + 1]!, innerUv[c * 2]!, innerUv[c * 2 + 1]!] : null);
+      w.uvs.push(
+        uv
+          ? [
+              uv[c * 2]!,
+              uv[c * 2 + 1]!,
+              uv[c1 * 2]!,
+              uv[c1 * 2 + 1]!,
+              innerUv[c1 * 2]!,
+              innerUv[c1 * 2 + 1]!,
+              innerUv[c * 2]!,
+              innerUv[c * 2 + 1]!,
+            ]
+          : null,
+      );
       w.mats.push(w.mats[fi]!);
     }
     w.faces[fi] = inner;
@@ -563,7 +617,11 @@ export function mergeAtCenter(m: MeshData, verts: Set<number>): OpResult {
   let best = 0;
   let bd = Infinity;
   for (let i = 0; i < vertCount(mesh); i++) {
-    const d = Math.hypot(mesh.v[i * 3]! - c[0], mesh.v[i * 3 + 1]! - c[1], mesh.v[i * 3 + 2]! - c[2]);
+    const d = Math.hypot(
+      mesh.v[i * 3]! - c[0],
+      mesh.v[i * 3 + 1]! - c[1],
+      mesh.v[i * 3 + 2]! - c[2],
+    );
     if (d < bd) {
       bd = d;
       best = i;
@@ -573,17 +631,26 @@ export function mergeAtCenter(m: MeshData, verts: Set<number>): OpResult {
 }
 
 /** Joins vertices closer than `distance` (Merge by distance / "remove doubles"). */
-export function mergeByDistance(m: MeshData, distance = 0.0001, only?: Set<number>): { mesh: MeshData; removed: number } {
+export function mergeByDistance(
+  m: MeshData,
+  distance = 0.0001,
+  only?: Set<number>,
+): { mesh: MeshData; removed: number } {
   const n = vertCount(m);
   const cell = Math.max(distance, 1e-9) * 2;
   const grid = new Map<string, number[]>();
   const map = new Int32Array(n).map((_, i) => i);
-  const keyOf = (x: number, y: number, z: number) => `${Math.floor(x / cell)},${Math.floor(y / cell)},${Math.floor(z / cell)}`;
+  const keyOf = (x: number, y: number, z: number) =>
+    `${Math.floor(x / cell)},${Math.floor(y / cell)},${Math.floor(z / cell)}`;
   let removed = 0;
   for (let i = 0; i < n; i++) {
     if (only && !only.has(i)) continue;
-    const x = m.v[i * 3]!, y = m.v[i * 3 + 1]!, z = m.v[i * 3 + 2]!;
-    const cx = Math.floor(x / cell), cy = Math.floor(y / cell), cz = Math.floor(z / cell);
+    const x = m.v[i * 3]!,
+      y = m.v[i * 3 + 1]!,
+      z = m.v[i * 3 + 2]!;
+    const cx = Math.floor(x / cell),
+      cy = Math.floor(y / cell),
+      cz = Math.floor(z / cell);
     let found = -1;
     for (let dx = -1; dx <= 1 && found < 0; dx++)
       for (let dy = -1; dy <= 1 && found < 0; dy++)
@@ -690,8 +757,10 @@ export function recalcNormals(m: MeshData, faces?: Set<number>, inside = false):
     }
     faceCenter(m, far, cen);
     faceNormal(m, far, nrm);
-    const outward = dot(nrm, [cen[0]! - center[0]!, cen[1]! - center[1]!, cen[2]! - center[2]!]) * (flip[far] ? -1 : 1);
-    const wantFlip = (outward < 0) !== inside;
+    const outward =
+      dot(nrm, [cen[0]! - center[0]!, cen[1]! - center[1]!, cen[2]! - center[2]!]) *
+      (flip[far] ? -1 : 1);
+    const wantFlip = outward < 0 !== inside;
     if (wantFlip) for (const fi of members) flip[fi] = flip[fi] ? 0 : 1;
   }
   const toFlip = new Set<number>();
@@ -711,7 +780,11 @@ export function subdivideFaces(m: MeshData, faces: Set<number>): OpResult {
     let i = mids.get(k);
     if (i === undefined) {
       i = w.v.length / 3;
-      w.v.push((w.v[a * 3]! + w.v[b * 3]!) / 2, (w.v[a * 3 + 1]! + w.v[b * 3 + 1]!) / 2, (w.v[a * 3 + 2]! + w.v[b * 3 + 2]!) / 2);
+      w.v.push(
+        (w.v[a * 3]! + w.v[b * 3]!) / 2,
+        (w.v[a * 3 + 1]! + w.v[b * 3 + 1]!) / 2,
+        (w.v[a * 3 + 2]! + w.v[b * 3 + 2]!) / 2,
+      );
       mids.set(k, i);
     }
     return i;
@@ -729,20 +802,25 @@ export function subdivideFaces(m: MeshData, faces: Set<number>): OpResult {
     w.v.push(c[0]!, c[1]!, c[2]!);
     let cu = 0;
     let cv = 0;
-    if (uv) for (let k = 0; k < n; k++) {
-      cu += uv[k * 2]! / n;
-      cv += uv[k * 2 + 1]! / n;
-    }
+    if (uv)
+      for (let k = 0; k < n; k++) {
+        cu += uv[k * 2]! / n;
+        cv += uv[k * 2 + 1]! / n;
+      }
     for (let k = 0; k < n; k++) {
       const prev = (k + n - 1) % n;
       const next = (k + 1) % n;
       const quad = [f[k]!, mid(f[k]!, f[next]!), center, mid(f[prev]!, f[k]!)];
       const quv = uv
         ? [
-            uv[k * 2]!, uv[k * 2 + 1]!,
-            (uv[k * 2]! + uv[next * 2]!) / 2, (uv[k * 2 + 1]! + uv[next * 2 + 1]!) / 2,
-            cu, cv,
-            (uv[prev * 2]! + uv[k * 2]!) / 2, (uv[prev * 2 + 1]! + uv[k * 2 + 1]!) / 2,
+            uv[k * 2]!,
+            uv[k * 2 + 1]!,
+            (uv[k * 2]! + uv[next * 2]!) / 2,
+            (uv[k * 2 + 1]! + uv[next * 2 + 1]!) / 2,
+            cu,
+            cv,
+            (uv[prev * 2]! + uv[k * 2]!) / 2,
+            (uv[prev * 2 + 1]! + uv[k * 2 + 1]!) / 2,
           ]
         : null;
       extra.push({ f: quad, uv: quv, mat: w.mats[fi]! });
@@ -845,7 +923,10 @@ export function fillVerts(m: MeshData, verts: Set<number>): OpResult {
     };
     loop = ids.sort((a, b) => ang(a) - ang(b));
     // Face away from the rest of the mesh.
-    const mc = selectionCenter(m, Array.from({ length: vertCount(m) }, (_, i) => i))!;
+    const mc = selectionCenter(
+      m,
+      Array.from({ length: vertCount(m) }, (_, i) => i),
+    )!;
     if (dot(nrm, [c[0] - mc[0], c[1] - mc[1], c[2] - mc[2]]) < 0) loop.reverse();
   }
   const w = toWork(m);
@@ -870,7 +951,11 @@ export function triangulateFaces(m: MeshData, faces?: Set<number>): MeshData {
     done.add(fi);
     const cs = [tri.corners[t * 3]!, tri.corners[t * 3 + 1]!, tri.corners[t * 3 + 2]!];
     out.faces.push(cs.map((c) => m.f[c]!));
-    out.uvs.push(m.uv && !Number.isNaN(m.uv[o[fi]! * 2]!) ? cs.flatMap((c) => [m.uv![c * 2]!, m.uv![c * 2 + 1]!]) : null);
+    out.uvs.push(
+      m.uv && !Number.isNaN(m.uv[o[fi]! * 2]!)
+        ? cs.flatMap((c) => [m.uv![c * 2]!, m.uv![c * 2 + 1]!])
+        : null,
+    );
     out.mats.push(w.mats[fi]!);
   }
   w.faces.forEach((f, fi) => {
@@ -958,10 +1043,14 @@ export function boxProjectUV(m: MeshData, faces?: Set<number>, scale = 1): MeshD
   for (let fi = 0; fi < m.fs.length; fi++) {
     if (faces && !faces.has(fi)) continue;
     faceNormal(m, fi, n);
-    const ax = Math.abs(n[0]!), ay = Math.abs(n[1]!), az = Math.abs(n[2]!);
+    const ax = Math.abs(n[0]!),
+      ay = Math.abs(n[1]!),
+      az = Math.abs(n[2]!);
     for (let c = o[fi]!; c < o[fi + 1]!; c++) {
       const i = m.f[c]! * 3;
-      const x = m.v[i]!, y = m.v[i + 1]!, z = m.v[i + 2]!;
+      const x = m.v[i]!,
+        y = m.v[i + 1]!,
+        z = m.v[i + 2]!;
       let u: number;
       let v: number;
       if (ax >= ay && ax >= az) {
@@ -987,7 +1076,11 @@ export function sub(a: ArrayLike<number>, b: ArrayLike<number>): number[] {
   return [a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!];
 }
 export function cross(a: ArrayLike<number>, b: ArrayLike<number>): number[] {
-  return [a[1]! * b[2]! - a[2]! * b[1]!, a[2]! * b[0]! - a[0]! * b[2]!, a[0]! * b[1]! - a[1]! * b[0]!];
+  return [
+    a[1]! * b[2]! - a[2]! * b[1]!,
+    a[2]! * b[0]! - a[0]! * b[2]!,
+    a[0]! * b[1]! - a[1]! * b[0]!,
+  ];
 }
 export function dot(a: ArrayLike<number>, b: ArrayLike<number>): number {
   return a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!;

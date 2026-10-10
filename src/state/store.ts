@@ -5,7 +5,10 @@ import { History } from './history';
 
 /* ------------------------------------------------------------------ routes */
 
-export type Route = { name: 'home' } | { name: 'editor'; projectId: string };
+export type Route =
+  | { name: 'home' }
+  | { name: 'editor'; projectId: string }
+  | { name: 'studio3d'; sceneId: string };
 
 export const route = signal<Route>({ name: 'home' });
 
@@ -62,7 +65,10 @@ export const panel = signal<PanelId | null>(null);
 /** Text clip being typed in (shows the keyboard-friendly editor). */
 export const editingTextId = signal<ID | null>(null);
 
-export const viewport = signal({ w: typeof window !== 'undefined' ? window.innerWidth : 1280, h: typeof window !== 'undefined' ? window.innerHeight : 800 });
+export const viewport = signal({
+  w: typeof window !== 'undefined' ? window.innerWidth : 1280,
+  h: typeof window !== 'undefined' ? window.innerHeight : 800,
+});
 /** Phone-style layout (bottom sheets, bottom tool bar). */
 export const isCompact = computed(() => viewport.value.w < 900);
 
@@ -84,7 +90,12 @@ export interface Toast {
 export const toasts = signal<Toast[]>([]);
 let toastSeq = 1;
 
-export function toast(message: string, kind: Toast['kind'] = 'info', action?: Toast['action'], ms = 3500): void {
+export function toast(
+  message: string,
+  kind: Toast['kind'] = 'info',
+  action?: Toast['action'],
+  ms = 3500,
+): void {
   const t: Toast = { id: toastSeq++, message, kind, action };
   toasts.value = [...toasts.value.slice(-2), t];
   setTimeout(() => dismissToast(t.id), action ? ms + 2500 : ms);
@@ -111,13 +122,22 @@ export interface Settings {
   /** Show advanced controls everywhere. */
   pro: boolean;
   tourDone: boolean;
+  /** The 3D studio has its own first-time tour. */
+  tour3dDone: boolean;
   checklistHidden: boolean;
 }
 
 const SETTINGS_KEY = 'kinora.settings';
 
 function loadSettings(): Settings {
-  const defaults: Settings = { theme: 'system', hints: true, pro: false, tourDone: false, checklistHidden: false };
+  const defaults: Settings = {
+    theme: 'system',
+    hints: true,
+    pro: false,
+    tourDone: false,
+    tour3dDone: false,
+    checklistHidden: false,
+  };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;

@@ -37,7 +37,15 @@ export interface Transform3 {
   s: Vec3;
 }
 
-export type Ease = 'constant' | 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'back' | 'bounce' | 'elastic';
+export type Ease =
+  | 'constant'
+  | 'linear'
+  | 'ease'
+  | 'ease-in'
+  | 'ease-out'
+  | 'back'
+  | 'bounce'
+  | 'elastic';
 
 export interface Keyframe {
   /** Time in seconds. */
@@ -55,7 +63,16 @@ export interface Keyframe {
  */
 export type AnimChannels = Record<string, Keyframe[]>;
 
-export type ModifierKind = 'mirror' | 'array' | 'solidify' | 'subdivision' | 'bevel' | 'decimate' | 'triangulate' | 'weld' | 'displace';
+export type ModifierKind =
+  | 'mirror'
+  | 'array'
+  | 'solidify'
+  | 'subdivision'
+  | 'bevel'
+  | 'decimate'
+  | 'triangulate'
+  | 'weld'
+  | 'displace';
 
 export interface ModifierBase {
   id: ID;
@@ -191,7 +208,14 @@ export interface ModelObj extends ObjBase {
 export type Obj3D = MeshObj | LightObj | CameraObj | EmptyObj | ModelObj;
 export type ObjKind = Obj3D['kind'];
 
-export type TextureSlot = 'color' | 'normal' | 'roughness' | 'metalness' | 'ao' | 'emissive' | 'opacity';
+export type TextureSlot =
+  | 'color'
+  | 'normal'
+  | 'roughness'
+  | 'metalness'
+  | 'ao'
+  | 'emissive'
+  | 'opacity';
 
 export interface Material3D {
   id: ID;

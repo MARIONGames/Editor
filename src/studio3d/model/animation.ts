@@ -2,7 +2,13 @@
  * Keyframe animation: sampling, editing keys, and one-tap motion presets that produce
  * ordinary keys (so pros can refine whatever beginners start with).
  */
-import { easeInCubic, easeInOutCubic, easeOutBack, easeOutBounce, easeOutCubic } from '../../util/math';
+import {
+  easeInCubic,
+  easeInOutCubic,
+  easeOutBack,
+  easeOutBounce,
+  easeOutCubic,
+} from '../../util/math';
 import type { AnimChannels, Ease, Keyframe, Obj3D, Transform3, Vec3 } from './types';
 
 export const EASES: { id: Ease; name: string; hint: string }[] = [
@@ -63,7 +69,13 @@ export function sample(keys: readonly Keyframe[] | undefined, t: number): number
 }
 
 /** Adds or replaces the key at time t (keys stay sorted). */
-export function setKey(keys: readonly Keyframe[] | undefined, t: number, v: number[], e?: Ease, eps = 1 / 240): Keyframe[] {
+export function setKey(
+  keys: readonly Keyframe[] | undefined,
+  t: number,
+  v: number[],
+  e?: Ease,
+  eps = 1 / 240,
+): Keyframe[] {
   const out = (keys ?? []).slice();
   const i = out.findIndex((k) => Math.abs(k.t - t) < eps);
   if (i >= 0) out[i] = { t: out[i]!.t, v: v.slice(), e: e ?? out[i]!.e };
@@ -74,13 +86,24 @@ export function setKey(keys: readonly Keyframe[] | undefined, t: number, v: numb
   return out;
 }
 
-export function removeKeys(keys: readonly Keyframe[], times: readonly number[], eps = 1 / 240): Keyframe[] {
+export function removeKeys(
+  keys: readonly Keyframe[],
+  times: readonly number[],
+  eps = 1 / 240,
+): Keyframe[] {
   return keys.filter((k) => !times.some((t) => Math.abs(k.t - t) < eps));
 }
 
 /** Shifts the keys at `times` by dt (later keys at the same moment win). */
-export function moveKeys(keys: readonly Keyframe[], times: readonly number[], dt: number, eps = 1 / 240): Keyframe[] {
-  const moved = keys.map((k) => (times.some((t) => Math.abs(k.t - t) < eps) ? { ...k, t: Math.max(0, k.t + dt) } : k));
+export function moveKeys(
+  keys: readonly Keyframe[],
+  times: readonly number[],
+  dt: number,
+  eps = 1 / 240,
+): Keyframe[] {
+  const moved = keys.map((k) =>
+    times.some((t) => Math.abs(k.t - t) < eps) ? { ...k, t: Math.max(0, k.t + dt) } : k,
+  );
   moved.sort((a, b) => a.t - b.t);
   const out: Keyframe[] = [];
   for (const k of moved) {
@@ -90,7 +113,12 @@ export function moveKeys(keys: readonly Keyframe[], times: readonly number[], dt
   return out;
 }
 
-export function setEase(keys: readonly Keyframe[], times: readonly number[], e: Ease, eps = 1 / 240): Keyframe[] {
+export function setEase(
+  keys: readonly Keyframe[],
+  times: readonly number[],
+  e: Ease,
+  eps = 1 / 240,
+): Keyframe[] {
   return keys.map((k) => (times.some((t) => Math.abs(k.t - t) < eps) ? { ...k, e } : k));
 }
 
@@ -98,13 +126,16 @@ export function setEase(keys: readonly Keyframe[], times: readonly number[], e: 
 export function keyTimes(anim: AnimChannels | undefined): number[] {
   if (!anim) return [];
   const set = new Set<number>();
-  for (const keys of Object.values(anim)) for (const k of keys) set.add(Math.round(k.t * 1000) / 1000);
+  for (const keys of Object.values(anim))
+    for (const k of keys) set.add(Math.round(k.t * 1000) / 1000);
   return [...set].sort((a, b) => a - b);
 }
 
 export function animEnd(anim: AnimChannels | undefined): number {
   let end = 0;
-  if (anim) for (const keys of Object.values(anim)) if (keys.length) end = Math.max(end, keys[keys.length - 1]!.t);
+  if (anim)
+    for (const keys of Object.values(anim))
+      if (keys.length) end = Math.max(end, keys[keys.length - 1]!.t);
   return end;
 }
 
@@ -126,7 +157,15 @@ export function scalarAt(obj: Obj3D, channel: string, fallback: number, t: numbe
 
 /* ------------------------------------------------------------------ presets */
 
-export type MotionPreset = 'spin' | 'bounce' | 'float' | 'pop' | 'wobble' | 'pulse' | 'fly-in' | 'turntable';
+export type MotionPreset =
+  | 'spin'
+  | 'bounce'
+  | 'float'
+  | 'pop'
+  | 'wobble'
+  | 'pulse'
+  | 'fly-in'
+  | 'turntable';
 
 export const MOTION_PRESETS: { id: MotionPreset; name: string; hint: string }[] = [
   { id: 'spin', name: 'Spin', hint: 'Turns all the way around' },
@@ -136,13 +175,22 @@ export const MOTION_PRESETS: { id: MotionPreset; name: string; hint: string }[] 
   { id: 'wobble', name: 'Wobble', hint: 'Rocks from side to side' },
   { id: 'pulse', name: 'Pulse', hint: 'Grows and shrinks like a heartbeat' },
   { id: 'fly-in', name: 'Fly in', hint: 'Swoops in from the side and settles' },
-  { id: 'turntable', name: 'Turntable', hint: 'One slow, steady turn — perfect for showing off a model' },
+  {
+    id: 'turntable',
+    name: 'Turntable',
+    hint: 'One slow, steady turn — perfect for showing off a model',
+  },
 ];
 
 const k = (t: number, v: number[], e: Ease = 'ease'): Keyframe => ({ t, v, e });
 
 /** Keys for a motion preset, starting at `start` and lasting `dur` seconds. */
-export function presetKeys(preset: MotionPreset, base: Transform3, start: number, dur: number): AnimChannels {
+export function presetKeys(
+  preset: MotionPreset,
+  base: Transform3,
+  start: number,
+  dur: number,
+): AnimChannels {
   const [px, py, pz] = base.p;
   const [rx, ry, rz] = base.r;
   const [sx, sy, sz] = base.s;
@@ -151,7 +199,9 @@ export function presetKeys(preset: MotionPreset, base: Transform3, start: number
     case 'spin':
       return { r: [k(t(0), [rx, ry, rz], 'ease'), k(t(1), [rx, ry + Math.PI * 2, rz])] };
     case 'turntable':
-      return { r: [k(t(0), [rx, ry, rz], 'linear'), k(t(1), [rx, ry + Math.PI * 2, rz], 'linear')] };
+      return {
+        r: [k(t(0), [rx, ry, rz], 'linear'), k(t(1), [rx, ry + Math.PI * 2, rz], 'linear')],
+      };
     case 'bounce': {
       const h = Math.max(0.5, sy);
       return {
@@ -183,7 +233,11 @@ export function presetKeys(preset: MotionPreset, base: Transform3, start: number
       };
     case 'pop':
       return {
-        s: [k(t(0), [0, 0, 0], 'back'), k(t(Math.min(1, 0.6 / Math.max(0.6, dur))), [sx, sy, sz]), k(t(1), [sx, sy, sz])],
+        s: [
+          k(t(0), [0, 0, 0], 'back'),
+          k(t(Math.min(1, 0.6 / Math.max(0.6, dur))), [sx, sy, sz]),
+          k(t(1), [sx, sy, sz]),
+        ],
       };
     case 'wobble':
       return {
@@ -198,12 +252,27 @@ export function presetKeys(preset: MotionPreset, base: Transform3, start: number
       };
     case 'pulse':
       return {
-        s: [k(t(0), [sx, sy, sz]), k(t(0.15), [sx * 1.15, sy * 1.15, sz * 1.15]), k(t(0.3), [sx, sy, sz]), k(t(0.45), [sx * 1.1, sy * 1.1, sz * 1.1]), k(t(0.6), [sx, sy, sz]), k(t(1), [sx, sy, sz])],
+        s: [
+          k(t(0), [sx, sy, sz]),
+          k(t(0.15), [sx * 1.15, sy * 1.15, sz * 1.15]),
+          k(t(0.3), [sx, sy, sz]),
+          k(t(0.45), [sx * 1.1, sy * 1.1, sz * 1.1]),
+          k(t(0.6), [sx, sy, sz]),
+          k(t(1), [sx, sy, sz]),
+        ],
       };
     case 'fly-in':
       return {
-        p: [k(t(0), [px - 8, py + 2, pz], 'ease-out'), k(t(0.7), [px, py, pz]), k(t(1), [px, py, pz])],
-        r: [k(t(0), [rx, ry - 1.2, rz + 0.6], 'ease-out'), k(t(0.7), [rx, ry, rz]), k(t(1), [rx, ry, rz])],
+        p: [
+          k(t(0), [px - 8, py + 2, pz], 'ease-out'),
+          k(t(0.7), [px, py, pz]),
+          k(t(1), [px, py, pz]),
+        ],
+        r: [
+          k(t(0), [rx, ry - 1.2, rz + 0.6], 'ease-out'),
+          k(t(0.7), [rx, ry, rz]),
+          k(t(1), [rx, ry, rz]),
+        ],
       };
   }
 }

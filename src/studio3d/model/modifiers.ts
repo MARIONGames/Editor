@@ -10,15 +10,43 @@ import { catmullClark } from './subdivision';
 import type { MeshData, Modifier, ModifierKind } from './types';
 
 export const MODIFIER_INFO: Record<ModifierKind, { name: string; plain: string; hint: string }> = {
-  mirror: { name: 'Mirror', plain: 'Mirror', hint: 'Model one half, get the other half for free (great for characters and cars)' },
-  array: { name: 'Array', plain: 'Repeat', hint: 'Copies the object in a row — stairs, fences, chains' },
+  mirror: {
+    name: 'Mirror',
+    plain: 'Mirror',
+    hint: 'Model one half, get the other half for free (great for characters and cars)',
+  },
+  array: {
+    name: 'Array',
+    plain: 'Repeat',
+    hint: 'Copies the object in a row — stairs, fences, chains',
+  },
   solidify: { name: 'Solidify', plain: 'Thickness', hint: 'Gives flat surfaces a real thickness' },
-  subdivision: { name: 'Subdivision Surface', plain: 'Smooth', hint: 'Rounds everything off for smooth, organic shapes' },
-  bevel: { name: 'Bevel', plain: 'Rounded edges', hint: 'Softens sharp edges so they catch the light like real objects' },
-  decimate: { name: 'Decimate', plain: 'Fewer polygons', hint: 'Reduces the polygon count for games and the web' },
-  triangulate: { name: 'Triangulate', plain: 'Triangles', hint: 'Turns every face into triangles, the way game engines draw them' },
+  subdivision: {
+    name: 'Subdivision Surface',
+    plain: 'Smooth',
+    hint: 'Rounds everything off for smooth, organic shapes',
+  },
+  bevel: {
+    name: 'Bevel',
+    plain: 'Rounded edges',
+    hint: 'Softens sharp edges so they catch the light like real objects',
+  },
+  decimate: {
+    name: 'Decimate',
+    plain: 'Fewer polygons',
+    hint: 'Reduces the polygon count for games and the web',
+  },
+  triangulate: {
+    name: 'Triangulate',
+    plain: 'Triangles',
+    hint: 'Turns every face into triangles, the way game engines draw them',
+  },
   weld: { name: 'Weld', plain: 'Weld', hint: 'Joins vertices that sit on top of each other' },
-  displace: { name: 'Displace', plain: 'Bumpy', hint: 'Pushes the surface in and out — rocks, terrain, organic detail' },
+  displace: {
+    name: 'Displace',
+    plain: 'Bumpy',
+    hint: 'Pushes the surface in and out — rocks, terrain, organic detail',
+  },
 };
 
 export function createModifier(kind: ModifierKind): Modifier {
@@ -135,7 +163,10 @@ function dropDuplicateFaces(w: Work): Work {
   const seen = new Set<string>();
   const out: Work = { v: w.v, faces: [], uvs: [], mats: [] };
   w.faces.forEach((f, i) => {
-    const k = f.slice().sort((a, b) => a - b).join(',');
+    const k = f
+      .slice()
+      .sort((a, b) => a - b)
+      .join(',');
     if (seen.has(k)) return;
     seen.add(k);
     out.faces.push(f);
@@ -147,7 +178,12 @@ function dropDuplicateFaces(w: Work): Work {
 
 /* -------------------------------------------------------------------- array */
 
-function array(m: MeshData, count: number, relative: [number, number, number], constant: [number, number, number]): MeshData {
+function array(
+  m: MeshData,
+  count: number,
+  relative: [number, number, number],
+  constant: [number, number, number],
+): MeshData {
   const n = Math.max(1, Math.min(200, Math.round(count)));
   if (n === 1) return m;
   const b = bounds(m);
@@ -201,7 +237,8 @@ function solidify(m: MeshData, thickness: number): MeshData {
   const w = toWork(m);
   const nv = vertCount(m);
   const vn = vertexNormals(m);
-  for (let i = 0; i < nv; i++) for (let k = 0; k < 3; k++) w.v.push(m.v[i * 3 + k]! - vn[i * 3 + k]! * thickness);
+  for (let i = 0; i < nv; i++)
+    for (let k = 0; k < 3; k++) w.v.push(m.v[i * 3 + k]! - vn[i * 3 + k]! * thickness);
   const count = w.faces.length;
   const uses = new Map<string, number>();
   for (let fi = 0; fi < count; fi++) {
@@ -261,19 +298,40 @@ export function decimate(m: MeshData, ratio: number): MeshData {
   const Q = new Float64Array(nv * 10);
   const addPlane = (i: number, a: number, b: number, c: number, d: number, wgt: number) => {
     const q = i * 10;
-    Q[q]! += a * a * wgt; Q[q + 1]! += a * b * wgt; Q[q + 2]! += a * c * wgt; Q[q + 3]! += a * d * wgt;
-    Q[q + 4]! += b * b * wgt; Q[q + 5]! += b * c * wgt; Q[q + 6]! += b * d * wgt;
-    Q[q + 7]! += c * c * wgt; Q[q + 8]! += c * d * wgt; Q[q + 9]! += d * d * wgt;
+    Q[q]! += a * a * wgt;
+    Q[q + 1]! += a * b * wgt;
+    Q[q + 2]! += a * c * wgt;
+    Q[q + 3]! += a * d * wgt;
+    Q[q + 4]! += b * b * wgt;
+    Q[q + 5]! += b * c * wgt;
+    Q[q + 6]! += b * d * wgt;
+    Q[q + 7]! += c * c * wgt;
+    Q[q + 8]! += c * d * wgt;
+    Q[q + 9]! += d * d * wgt;
   };
   const triPlane = (f: number[]) => {
     const [i, j, k] = f as [number, number, number];
-    const ax = pos[j * 3]! - pos[i * 3]!, ay = pos[j * 3 + 1]! - pos[i * 3 + 1]!, az = pos[j * 3 + 2]! - pos[i * 3 + 2]!;
-    const bx = pos[k * 3]! - pos[i * 3]!, by = pos[k * 3 + 1]! - pos[i * 3 + 1]!, bz = pos[k * 3 + 2]! - pos[i * 3 + 2]!;
-    let nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx;
+    const ax = pos[j * 3]! - pos[i * 3]!,
+      ay = pos[j * 3 + 1]! - pos[i * 3 + 1]!,
+      az = pos[j * 3 + 2]! - pos[i * 3 + 2]!;
+    const bx = pos[k * 3]! - pos[i * 3]!,
+      by = pos[k * 3 + 1]! - pos[i * 3 + 1]!,
+      bz = pos[k * 3 + 2]! - pos[i * 3 + 2]!;
+    let nx = ay * bz - az * by,
+      ny = az * bx - ax * bz,
+      nz = ax * by - ay * bx;
     const area = Math.hypot(nx, ny, nz);
     if (area < 1e-20) return null;
-    nx /= area; ny /= area; nz /= area;
-    return [nx, ny, nz, -(nx * pos[i * 3]! + ny * pos[i * 3 + 1]! + nz * pos[i * 3 + 2]!), area / 2] as const;
+    nx /= area;
+    ny /= area;
+    nz /= area;
+    return [
+      nx,
+      ny,
+      nz,
+      -(nx * pos[i * 3]! + ny * pos[i * 3 + 1]! + nz * pos[i * 3 + 2]!),
+      area / 2,
+    ] as const;
   };
   for (const f of faces) {
     const p = triPlane(f);
@@ -281,28 +339,46 @@ export function decimate(m: MeshData, ratio: number): MeshData {
   }
   // Border edges get a strong perpendicular plane so open edges don't shrink.
   const edgeUse = new Map<string, number>();
-  for (const f of faces) for (let c = 0; c < 3; c++) {
-    const a = f[c]!, b = f[(c + 1) % 3]!;
-    const k = a < b ? `${a},${b}` : `${b},${a}`;
-    edgeUse.set(k, (edgeUse.get(k) ?? 0) + 1);
-  }
+  for (const f of faces)
+    for (let c = 0; c < 3; c++) {
+      const a = f[c]!,
+        b = f[(c + 1) % 3]!;
+      const k = a < b ? `${a},${b}` : `${b},${a}`;
+      edgeUse.set(k, (edgeUse.get(k) ?? 0) + 1);
+    }
   for (const f of faces) {
     const p = triPlane(f);
     if (!p) continue;
     for (let c = 0; c < 3; c++) {
-      const a = f[c]!, b = f[(c + 1) % 3]!;
+      const a = f[c]!,
+        b = f[(c + 1) % 3]!;
       if (edgeUse.get(a < b ? `${a},${b}` : `${b},${a}`) !== 1) continue;
-      const ex = pos[b * 3]! - pos[a * 3]!, ey = pos[b * 3 + 1]! - pos[a * 3 + 1]!, ez = pos[b * 3 + 2]! - pos[a * 3 + 2]!;
-      let nx = ey * p[2] - ez * p[1], ny = ez * p[0] - ex * p[2], nz = ex * p[1] - ey * p[0];
+      const ex = pos[b * 3]! - pos[a * 3]!,
+        ey = pos[b * 3 + 1]! - pos[a * 3 + 1]!,
+        ez = pos[b * 3 + 2]! - pos[a * 3 + 2]!;
+      let nx = ey * p[2] - ez * p[1],
+        ny = ez * p[0] - ex * p[2],
+        nz = ex * p[1] - ey * p[0];
       const l = Math.hypot(nx, ny, nz) || 1;
-      nx /= l; ny /= l; nz /= l;
+      nx /= l;
+      ny /= l;
+      nz /= l;
       const d = -(nx * pos[a * 3]! + ny * pos[a * 3 + 1]! + nz * pos[a * 3 + 2]!);
       addPlane(a, nx, ny, nz, d, 1000);
       addPlane(b, nx, ny, nz, d, 1000);
     }
   }
   const err = (q: Float64Array, x: number, y: number, z: number) =>
-    q[0]! * x * x + 2 * q[1]! * x * y + 2 * q[2]! * x * z + 2 * q[3]! * x + q[4]! * y * y + 2 * q[5]! * y * z + 2 * q[6]! * y + q[7]! * z * z + 2 * q[8]! * z + q[9]!;
+    q[0]! * x * x +
+    2 * q[1]! * x * y +
+    2 * q[2]! * x * z +
+    2 * q[3]! * x +
+    q[4]! * y * y +
+    2 * q[5]! * y * z +
+    2 * q[6]! * y +
+    q[7]! * z * z +
+    2 * q[8]! * z +
+    q[9]!;
   const parent = new Int32Array(nv).map((_, i) => i);
   const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x]!)));
   const alive = new Uint8Array(faces.length).fill(1);
@@ -319,13 +395,16 @@ export function decimate(m: MeshData, ratio: number): MeshData {
       if (!alive[fi]) continue;
       const f = faces[fi]!;
       for (let c = 0; c < 3; c++) {
-        const a = find(f[c]!), b = find(f[(c + 1) % 3]!);
+        const a = find(f[c]!),
+          b = find(f[(c + 1) % 3]!);
         if (a === b) continue;
         const k = a < b ? `${a},${b}` : `${b},${a}`;
         if (seenE.has(k)) continue;
         seenE.add(k);
         for (let t = 0; t < 10; t++) q[t] = Q[a * 10 + t]! + Q[b * 10 + t]!;
-        const mx = (pos[a * 3]! + pos[b * 3]!) / 2, my = (pos[a * 3 + 1]! + pos[b * 3 + 1]!) / 2, mz = (pos[a * 3 + 2]! + pos[b * 3 + 2]!) / 2;
+        const mx = (pos[a * 3]! + pos[b * 3]!) / 2,
+          my = (pos[a * 3 + 1]! + pos[b * 3 + 1]!) / 2,
+          mz = (pos[a * 3 + 2]! + pos[b * 3 + 2]!) / 2;
         const opts = [
           [pos[a * 3]!, pos[a * 3 + 1]!, pos[a * 3 + 2]!],
           [pos[b * 3]!, pos[b * 3 + 1]!, pos[b * 3 + 2]!],
@@ -350,7 +429,8 @@ export function decimate(m: MeshData, ratio: number): MeshData {
     let done = 0;
     for (const c of cands) {
       if (done >= budget) break;
-      const a = find(c.a), b = find(c.b);
+      const a = find(c.a),
+        b = find(c.b);
       if (a === b || touched[a] || touched[b]) continue;
       // Don't flip any surrounding triangle.
       let flips = false;
@@ -361,9 +441,14 @@ export function decimate(m: MeshData, ratio: number): MeshData {
           if (f.includes(a) && f.includes(b)) continue;
           const before = triNormal(pos, f);
           const moved = f.map((i) => (i === a || i === b ? -1 : i));
-          const pts = moved.map((i, k) => (i === -1 ? [c.x, c.y, c.z] : [pos[f[k]! * 3]!, pos[f[k]! * 3 + 1]!, pos[f[k]! * 3 + 2]!]));
+          const pts = moved.map((i, k) =>
+            i === -1
+              ? [c.x, c.y, c.z]
+              : [pos[f[k]! * 3]!, pos[f[k]! * 3 + 1]!, pos[f[k]! * 3 + 2]!],
+          );
           const after = triNormalPts(pts);
-          if (before[0] * after[0] + before[1] * after[1] + before[2] * after[2] < 0.2) flips = true;
+          if (before[0] * after[0] + before[1] * after[1] + before[2] * after[2] < 0.2)
+            flips = true;
         }
         if (flips) break;
       }
@@ -403,9 +488,15 @@ function triNormal(pos: Float64Array, f: number[]): [number, number, number] {
 
 function triNormalPts(p: number[][]): [number, number, number] {
   const [a, b, c] = p as [number[], number[], number[]];
-  const ux = b[0]! - a[0]!, uy = b[1]! - a[1]!, uz = b[2]! - a[2]!;
-  const vx = c[0]! - a[0]!, vy = c[1]! - a[1]!, vz = c[2]! - a[2]!;
-  const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+  const ux = b[0]! - a[0]!,
+    uy = b[1]! - a[1]!,
+    uz = b[2]! - a[2]!;
+  const vx = c[0]! - a[0]!,
+    vy = c[1]! - a[1]!,
+    vz = c[2]! - a[2]!;
+  const nx = uy * vz - uz * vy,
+    ny = uz * vx - ux * vz,
+    nz = ux * vy - uy * vx;
   const l = Math.hypot(nx, ny, nz) || 1;
   return [nx / l, ny / l, nz / l];
 }
@@ -421,10 +512,16 @@ function hash3(x: number, y: number, z: number, seed: number): number {
 
 /** Smooth 3D value noise in [-1, 1]. */
 export function noise3(x: number, y: number, z: number, seed = 0): number {
-  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
-  const xf = x - xi, yf = y - yi, zf = z - zi;
+  const xi = Math.floor(x),
+    yi = Math.floor(y),
+    zi = Math.floor(z);
+  const xf = x - xi,
+    yf = y - yi,
+    zf = z - zi;
   const s = (t: number) => t * t * (3 - 2 * t);
-  const u = s(xf), v = s(yf), w = s(zf);
+  const u = s(xf),
+    v = s(yf),
+    w = s(zf);
   let r = 0;
   for (let dz = 0; dz < 2; dz++)
     for (let dy = 0; dy < 2; dy++)
@@ -440,9 +537,12 @@ function displace(m: MeshData, strength: number, scale: number, seed: number): M
   const v = m.v.slice();
   const k = 1 / Math.max(0.01, scale);
   for (let i = 0; i < v.length; i += 3) {
-    const x = m.v[i]! * k, y = m.v[i + 1]! * k, z = m.v[i + 2]! * k;
+    const x = m.v[i]! * k,
+      y = m.v[i + 1]! * k,
+      z = m.v[i + 2]! * k;
     // Two octaves for natural-looking bumps.
-    const d = (noise3(x, y, z, seed) * 0.7 + noise3(x * 2.1, y * 2.1, z * 2.1, seed + 7) * 0.3) * strength;
+    const d =
+      (noise3(x, y, z, seed) * 0.7 + noise3(x * 2.1, y * 2.1, z * 2.1, seed + 7) * 0.3) * strength;
     v[i] = m.v[i]! + vn[i]! * d;
     v[i + 1] = m.v[i + 1]! + vn[i + 1]! * d;
     v[i + 2] = m.v[i + 2]! + vn[i + 2]! * d;
@@ -455,4 +555,3 @@ export function isFinite3(m: MeshData): boolean {
   for (let i = 0; i < m.v.length; i++) if (!Number.isFinite(m.v[i]!)) return false;
   return true;
 }
-

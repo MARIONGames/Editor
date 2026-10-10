@@ -3,7 +3,16 @@
  * reach for most. Both keep the mesh watertight and keep face winding consistent.
  */
 import { edgeEnds, edgeKey, edgeTable, faceNormal, fromWork, toWork, type Work } from './mesh';
-import { cross, dot, emptySelection, norm, selectionFromEdges, selectionFromFaces, sub, type OpResult } from './meshOps';
+import {
+  cross,
+  dot,
+  emptySelection,
+  norm,
+  selectionFromEdges,
+  selectionFromFaces,
+  sub,
+  type OpResult,
+} from './meshOps';
 import type { MeshData } from './types';
 
 interface Oriented {
@@ -37,7 +46,14 @@ export function edgeRing(m: MeshData, start: number): EdgeRing {
       seen.add(face);
       const f = w.faces[face]!;
       let i = 0;
-      while (i < 4 && !((f[i] === e.from && f[(i + 1) % 4] === e.to) || (f[i] === e.to && f[(i + 1) % 4] === e.from))) i++;
+      while (
+        i < 4 &&
+        !(
+          (f[i] === e.from && f[(i + 1) % 4] === e.to) ||
+          (f[i] === e.to && f[(i + 1) % 4] === e.from)
+        )
+      )
+        i++;
       if (i === 4) break;
       const A = f[i]!;
       const C = f[(i + 2) % 4]!;
@@ -71,7 +87,10 @@ export function loopCut(m: MeshData, start: number, cuts = 1, slide = 0): OpResu
   const ring = edgeRing(m, start);
   if (!ring.faces.length) return { mesh: m, sel: emptySelection() };
   const n = Math.max(1, Math.round(cuts));
-  const params = n === 1 ? [Math.min(0.98, Math.max(0.02, 0.5 + slide * 0.5))] : Array.from({ length: n }, (_, i) => (i + 1) / (n + 1));
+  const params =
+    n === 1
+      ? [Math.min(0.98, Math.max(0.02, 0.5 + slide * 0.5))]
+      : Array.from({ length: n }, (_, i) => (i + 1) / (n + 1));
   const w = toWork(m);
   // New vertices on every ring edge, ordered from its `from` end.
   const cut = new Map<number, { from: number; to: number; verts: number[] }>();
@@ -80,7 +99,8 @@ export function loopCut(m: MeshData, start: number, cuts = 1, slide = 0): OpResu
     if (cut.has(k)) continue;
     const verts = params.map((t) => {
       const i = w.v.length / 3;
-      for (let c = 0; c < 3; c++) w.v.push(w.v[e.from * 3 + c]! + (w.v[e.to * 3 + c]! - w.v[e.from * 3 + c]!) * t);
+      for (let c = 0; c < 3; c++)
+        w.v.push(w.v[e.from * 3 + c]! + (w.v[e.to * 3 + c]! - w.v[e.from * 3 + c]!) * t);
       return i;
     });
     cut.set(k, { from: e.from, to: e.to, verts });
@@ -88,9 +108,14 @@ export function loopCut(m: MeshData, start: number, cuts = 1, slide = 0): OpResu
   const along = (x: number, y: number): { verts: number[]; ts: number[] } | null => {
     const c = cut.get(edgeKey(x, y));
     if (!c) return null;
-    return c.from === x ? { verts: c.verts, ts: params } : { verts: c.verts.slice().reverse(), ts: params.map((t) => 1 - t).reverse() };
+    return c.from === x
+      ? { verts: c.verts, ts: params }
+      : { verts: c.verts.slice().reverse(), ts: params.map((t) => 1 - t).reverse() };
   };
-  const lerpUv = (uv: number[], i: number, j: number, t: number) => [uv[i * 2]! + (uv[j * 2]! - uv[i * 2]!) * t, uv[i * 2 + 1]! + (uv[j * 2 + 1]! - uv[i * 2 + 1]!) * t];
+  const lerpUv = (uv: number[], i: number, j: number, t: number) => [
+    uv[i * 2]! + (uv[j * 2]! - uv[i * 2]!) * t,
+    uv[i * 2 + 1]! + (uv[j * 2 + 1]! - uv[i * 2 + 1]!) * t,
+  ];
   const ringSet = new Set(ring.faces);
   const out: Work = { v: w.v, faces: [], uvs: [], mats: [] };
   const newEdges: number[] = [];
@@ -98,9 +123,21 @@ export function loopCut(m: MeshData, start: number, cuts = 1, slide = 0): OpResu
     const f = w.faces[fi]!;
     const e = ring.edges[j]!;
     let i = 0;
-    while (!((f[i] === e.from && f[(i + 1) % 4] === e.to) || (f[i] === e.to && f[(i + 1) % 4] === e.from))) i++;
-    const ia = i, ib = (i + 1) % 4, ic = (i + 2) % 4, id = (i + 3) % 4;
-    const A = f[ia]!, B = f[ib]!, C = f[ic]!, D = f[id]!;
+    while (
+      !(
+        (f[i] === e.from && f[(i + 1) % 4] === e.to) ||
+        (f[i] === e.to && f[(i + 1) % 4] === e.from)
+      )
+    )
+      i++;
+    const ia = i,
+      ib = (i + 1) % 4,
+      ic = (i + 2) % 4,
+      id = (i + 3) % 4;
+    const A = f[ia]!,
+      B = f[ib]!,
+      C = f[ic]!,
+      D = f[id]!;
     const L = along(A, B)!;
     const M = along(D, C)!;
     const uv = w.uvs[fi];
@@ -113,7 +150,9 @@ export function loopCut(m: MeshData, start: number, cuts = 1, slide = 0): OpResu
     const stripDUv = [cornerUv(id), ...mu, cornerUv(ic)];
     for (let k = 0; k < strip.length - 1; k++) {
       out.faces.push([strip[k]!, strip[k + 1]!, stripD[k + 1]!, stripD[k]!]);
-      out.uvs.push(uv ? [...stripUv[k]!, ...stripUv[k + 1]!, ...stripDUv[k + 1]!, ...stripDUv[k]!] : null);
+      out.uvs.push(
+        uv ? [...stripUv[k]!, ...stripUv[k + 1]!, ...stripDUv[k + 1]!, ...stripDUv[k]!] : null,
+      );
       out.mats.push(w.mats[fi]!);
     }
     for (let k = 0; k < L.verts.length; k++) newEdges.push(edgeKey(L.verts[k]!, M.verts[k]!));
@@ -205,7 +244,10 @@ export function bevelEdges(m: MeshData, edgeKeys: Set<number>, width: number): O
         let bis = norm([in1[0]! + in2[0]!, in1[1]! + in2[1]!, in1[2]! + in2[2]!]);
         if (!Number.isFinite(bis[0]!)) bis = in1;
         const d = width / Math.max(0.2, dot(bis, in1));
-        inset.set(`${fi}:${c}`, addV([pv[0]! + bis[0]! * d, pv[1]! + bis[1]! * d, pv[2]! + bis[2]! * d]));
+        inset.set(
+          `${fi}:${c}`,
+          addV([pv[0]! + bis[0]! * d, pv[1]! + bis[1]! * d, pv[2]! + bis[2]! * d]),
+        );
       } else {
         // Slide along the non-beveled edge until it meets the offset beveled edge.
         const target = b1 ? nx : p;
@@ -214,7 +256,10 @@ export function bevelEdges(m: MeshData, edgeKeys: Set<number>, width: number): O
         const dirv = norm(sub(P(target), pv));
         const len = Math.hypot(...sub(P(target), pv));
         const t = Math.min(len * 0.95, width / Math.max(0.2, Math.abs(dot(dirv, b1 ? in1 : in2))));
-        slides.set(key, addV([pv[0]! + dirv[0]! * t, pv[1]! + dirv[1]! * t, pv[2]! + dirv[2]! * t]));
+        slides.set(
+          key,
+          addV([pv[0]! + dirv[0]! * t, pv[1]! + dirv[1]! * t, pv[2]! + dirv[2]! * t]),
+        );
       }
     }
   });
@@ -278,7 +323,8 @@ export function bevelEdges(m: MeshData, edgeKeys: Set<number>, width: number): O
   // Close the holes left around beveled corners.
   const newVerts = new Set<number>([...inset.values(), ...slides.values(), ...touched]);
   const directed = new Set<string>();
-  for (const f of out.faces) for (let c = 0; c < f.length; c++) directed.add(`${f[c]},${f[(c + 1) % f.length]}`);
+  for (const f of out.faces)
+    for (let c = 0; c < f.length; c++) directed.add(`${f[c]},${f[(c + 1) % f.length]}`);
   const next = new Map<number, number>();
   for (const f of out.faces)
     for (let c = 0; c < f.length; c++) {

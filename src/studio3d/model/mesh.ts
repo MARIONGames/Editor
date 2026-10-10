@@ -31,8 +31,12 @@ export function faceVerts(m: MeshData, face: number): number[] {
 
 /** Unique key for the undirected edge a–b (works for meshes up to 16.7M vertices). */
 export const EDGE_BASE = 2 ** 24;
-export const edgeKey = (a: number, b: number): number => (a < b ? a * EDGE_BASE + b : b * EDGE_BASE + a);
-export const edgeEnds = (key: number): [number, number] => [Math.floor(key / EDGE_BASE), key % EDGE_BASE];
+export const edgeKey = (a: number, b: number): number =>
+  a < b ? a * EDGE_BASE + b : b * EDGE_BASE + a;
+export const edgeEnds = (key: number): [number, number] => [
+  Math.floor(key / EDGE_BASE),
+  key % EDGE_BASE,
+];
 
 export interface EdgeTable {
   /** Edge keys in first-seen order. */
@@ -110,8 +114,12 @@ export function faceNormalRaw(m: MeshData, face: number, out: number[] = [0, 0, 
   for (let c = 0; c < n; c++) {
     const a = m.f[s + c]! * 3;
     const b = m.f[s + ((c + 1) % n)]! * 3;
-    const ax = m.v[a]!, ay = m.v[a + 1]!, az = m.v[a + 2]!;
-    const bx = m.v[b]!, by = m.v[b + 1]!, bz = m.v[b + 2]!;
+    const ax = m.v[a]!,
+      ay = m.v[a + 1]!,
+      az = m.v[a + 2]!;
+    const bx = m.v[b]!,
+      by = m.v[b + 1]!,
+      bz = m.v[b + 2]!;
     x += (ay - by) * (az + bz);
     y += (az - bz) * (ax + bx);
     z += (ax - bx) * (ay + by);
@@ -147,7 +155,10 @@ export function faceCenter(m: MeshData, face: number, out: number[] = [0, 0, 0])
   return out;
 }
 
-export function bounds(m: MeshData): { min: [number, number, number]; max: [number, number, number] } {
+export function bounds(m: MeshData): {
+  min: [number, number, number];
+  max: [number, number, number];
+} {
   const min: [number, number, number] = [Infinity, Infinity, Infinity];
   const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < m.v.length; i += 3) {
@@ -169,9 +180,15 @@ export function signedVolume(m: MeshData): number {
     const a = m.f[tri.corners[t]!]! * 3;
     const b = m.f[tri.corners[t + 1]!]! * 3;
     const c = m.f[tri.corners[t + 2]!]! * 3;
-    const ax = m.v[a]!, ay = m.v[a + 1]!, az = m.v[a + 2]!;
-    const bx = m.v[b]!, by = m.v[b + 1]!, bz = m.v[b + 2]!;
-    const cx = m.v[c]!, cy = m.v[c + 1]!, cz = m.v[c + 2]!;
+    const ax = m.v[a]!,
+      ay = m.v[a + 1]!,
+      az = m.v[a + 2]!;
+    const bx = m.v[b]!,
+      by = m.v[b + 1]!,
+      bz = m.v[b + 2]!;
+    const cx = m.v[c]!,
+      cy = m.v[c + 1]!,
+      cz = m.v[c + 2]!;
     vol += ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx);
   }
   return vol / 6;
@@ -248,10 +265,16 @@ export function triangulate(m: MeshData): Triangulation {
  * Ear clipping in the polygon's best-fit plane. Returns local corner indices (3 per
  * triangle). Quads use the shorter valid diagonal.
  */
-export function triangulatePolygon(pos: ArrayLike<number>, idx: ArrayLike<number>, normal: number[]): number[] {
+export function triangulatePolygon(
+  pos: ArrayLike<number>,
+  idx: ArrayLike<number>,
+  normal: number[],
+): number[] {
   const n = idx.length;
   // Project to 2D by dropping the dominant normal axis.
-  const ax = Math.abs(normal[0]!), ay = Math.abs(normal[1]!), az = Math.abs(normal[2]!);
+  const ax = Math.abs(normal[0]!),
+    ay = Math.abs(normal[1]!),
+    az = Math.abs(normal[2]!);
   const drop = ax > ay && ax > az ? 0 : ay > az ? 1 : 2;
   const u = drop === 0 ? 1 : 0;
   const v = drop === 2 ? 1 : 2;
@@ -263,7 +286,8 @@ export function triangulatePolygon(pos: ArrayLike<number>, idx: ArrayLike<number
     py[i] = pos[idx[i]! * 3 + v]! * (flip ? -1 : 1);
   }
   // Orientation of the projected polygon (CCW > 0) — keep winding consistent with `idx`.
-  const cross = (a: number, b: number, c: number) => (px[b]! - px[a]!) * (py[c]! - py[a]!) - (py[b]! - py[a]!) * (px[c]! - px[a]!);
+  const cross = (a: number, b: number, c: number) =>
+    (px[b]! - px[a]!) * (py[c]! - py[a]!) - (py[b]! - py[a]!) * (px[c]! - px[a]!);
   let area = 0;
   for (let i = 0; i < n; i++) area += px[i]! * py[(i + 1) % n]! - px[(i + 1) % n]! * py[i]!;
   const sgn = area >= 0 ? 1 : -1;
@@ -389,8 +413,16 @@ export function fromWork(w: Work, opts: { dropLoose?: boolean } = {}): MeshData 
 }
 
 /** Builds a mesh from positions and faces (and optional corner UVs). */
-export function makeMesh(v: number[], faces: number[][], uvs?: (number[] | null)[], mats?: number[]): MeshData {
-  return fromWork({ v, faces, uvs: uvs ?? faces.map(() => null), mats: mats ?? faces.map(() => 0) }, { dropLoose: false });
+export function makeMesh(
+  v: number[],
+  faces: number[][],
+  uvs?: (number[] | null)[],
+  mats?: number[],
+): MeshData {
+  return fromWork(
+    { v, faces, uvs: uvs ?? faces.map(() => null), mats: mats ?? faces.map(() => 0) },
+    { dropLoose: false },
+  );
 }
 
 /** Copy of a mesh with only positions replaced (topology and UVs are shared). */

@@ -22,7 +22,18 @@ export interface AppEvents {
   'panel:opened': { panel: string };
   'export:started': { kind: 'image' | 'video' };
   'export:done': { kind: 'image' | 'video' };
-  'undo': Record<string, never>;
+  undo: Record<string, never>;
+  '3d:opened': { kind: string };
+  '3d:added': { kind: string };
+  '3d:selected': { kind: string };
+  '3d:transformed': { how: string };
+  '3d:edited': { op: string };
+  '3d:mode': { mode: string };
+  '3d:material': { preset: string };
+  '3d:modifier': { kind: string };
+  '3d:keyed': { how: string };
+  '3d:played': Record<string, never>;
+  '3d:rendered': { kind: 'image' | 'video' | 'model' };
 }
 
 type Handler<K extends keyof AppEvents> = (payload: AppEvents[K]) => void;
