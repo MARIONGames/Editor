@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Sun,
   Trash2,
+  UserRound,
   WandSparkles,
   WifiOff,
 } from 'lucide-preact';
@@ -32,6 +33,11 @@ import { Logo } from '../components/Logo';
 import { confirmDialog, openDialog, promptDialog } from '../dialogs/dialogState';
 import { startMeme, startPhotoEdit, startQuickTrim, startSlideshow, startVideo } from './flows';
 import { pickFiles } from '../components/filePicker';
+import { COPYRIGHT } from '../../legal/eula';
+import { accountsEnabled } from '../../account/config';
+import { account } from '../../account/session';
+import { notifyDeleted, syncLabel, syncState } from '../../account/sync';
+import { on } from '../../state/events';
 
 /** The 3D studio is a separate download: load it only when someone goes 3D. */
 const studio3d = () => import('../../studio3d/state/actions3d');
@@ -181,6 +187,8 @@ export function Home() {
       .catch(() => setProjects([]));
   useEffect(() => {
     void reload();
+    // Projects arriving from (or deleted on) other devices.
+    return on('sync:changed', () => void reload());
   }, []);
   const covers = useMemo(() => {
     const m = new Map<string, string>();
@@ -213,6 +221,7 @@ export function Home() {
           >
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
           </button>
+          {accountsEnabled && <AccountButton />}
           <button
             class="icon-btn"
             aria-label="Settings"
@@ -372,6 +381,7 @@ export function Home() {
                           });
                           if (ok) {
                             await (p.is3d ? db.deleteScene(p.id) : deleteProjectById(p.id));
+                            notifyDeleted();
                             void reload();
                           }
                         }}
@@ -408,7 +418,8 @@ export function Home() {
           </div>
           <div class="promises">
             <span>
-              <ShieldCheck size={18} /> Private: your files never leave this device
+              <ShieldCheck size={18} /> Private: your files stay on this device (cloud backup is
+              optional)
             </span>
             <span>
               <WifiOff size={18} /> Works offline
@@ -419,6 +430,43 @@ export function Home() {
           </div>
         </section>
       </main>
+      <footer class="home-footer">
+        <span>Kinora {COPYRIGHT}</span>
+        <button class="link-btn" onClick={() => openDialog({ type: 'eula' })}>
+          License agreement
+        </button>
+        <button class="link-btn" onClick={() => openDialog({ type: 'notices' })}>
+          Third-party notices
+        </button>
+      </footer>
     </div>
+  );
+}
+
+/** Home header: "Sign in", or the account's initial with the backup status. */
+function AccountButton() {
+  const acc = account.value;
+  const st = syncState.value;
+  if (!acc) {
+    return (
+      <button
+        class="btn ghost small"
+        onClick={() => openDialog({ type: 'account' })}
+        title="Optional: back up your projects and use them on other devices"
+      >
+        <UserRound size={18} /> <span class="hide-xs">Sign in</span>
+      </button>
+    );
+  }
+  return (
+    <button
+      class={`account-chip status-${st.status}`}
+      onClick={() => openDialog({ type: 'account' })}
+      title={`${acc.user.name} — ${syncLabel(st)}`}
+      aria-label={`Account: ${acc.user.name}. ${syncLabel(st)}`}
+    >
+      <span class="account-avatar small">{acc.user.name.slice(0, 1).toUpperCase()}</span>
+      <span class="account-dot" />
+    </button>
   );
 }

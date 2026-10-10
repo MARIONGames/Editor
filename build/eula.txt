@@ -1,0 +1,66 @@
+Kinora End User License Agreement
+Version 2026-10-10
+
+1. About this agreement
+
+This End User License Agreement ("Agreement") is between you and Marios Kouretis ("we", "us"), the author and owner of Kinora, including the web app, the desktop apps, the optional online account service and all related files (together, the "Software").
+
+By installing, opening or using the Software you agree to this Agreement. If you do not agree, do not use the Software.
+
+2. Your license
+
+We give you a personal, non-exclusive, non-transferable, revocable license to install and use the Software on devices you own or control, for personal and commercial purposes, as long as you follow this Agreement.
+
+The Software is licensed, not sold. We keep all rights, title and interest in the Software, including its code, design, name and logo.
+
+3. What you make is yours
+
+You own the photos, videos, 3D models and other content you create or import with the Software ("Your Content"). We claim no ownership of Your Content and need no license to it, except the limited permission described in section 5 to store it for you if you turn on cloud backup.
+
+You are responsible for having the rights to everything you import, edit and publish, including music, images, fonts and models made by others.
+
+4. What you may not do
+
+You may not: copy, sell, rent, lend, sublicense or redistribute the Software; modify it or create derivative works of it; decompile, disassemble or reverse engineer it, except where the law allows this despite this restriction; remove or change any copyright or license notice; use the Software to create or share content that is illegal or infringes the rights of others; or attempt to disrupt, overload or gain unauthorized access to the account service or other users' data.
+
+5. Optional account and cloud backup
+
+The Software works without an account, including offline. An account is optional. If you create one, you must give accurate information and keep your password secret; you are responsible for activity under your account.
+
+If you turn on cloud backup, you permit us to store and transmit Your Content and project files only to back them up and make them available on your devices. We do not use Your Content for any other purpose.
+
+You can delete your account at any time in the app; this deletes your cloud backups. Storage limits apply. The online service may change, be interrupted or end; please keep your own copies of important work.
+
+6. Privacy
+
+Without an account, your projects and files stay on your device and are not sent to us. The Software shows no ads and contains no tracking.
+
+With an account, we store your email address, display name, a protected (hashed) form of your password and, if you use cloud backup, your backed-up projects. We do not sell this information and only share it when required by law.
+
+7. Third-party components
+
+The Software includes open-source components (such as fonts, icons and libraries) that are provided under their own licenses. Those licenses apply to those components and are listed in the third-party notices that come with the Software.
+
+8. Updates and changes
+
+We may update the Software and this Agreement. When this Agreement changes, the Software will ask you to accept the new version before you continue using it.
+
+9. No warranty
+
+The Software is provided "as is" and "as available", without warranties of any kind, whether express or implied, including merchantability, fitness for a particular purpose and non-infringement, to the fullest extent permitted by law. We do not promise that the Software will be error-free or that no data will ever be lost.
+
+10. Limitation of liability
+
+To the fullest extent permitted by law, we are not liable for any indirect, incidental, special or consequential damages, or for loss of data, profits or business, arising from your use of the Software. Our total liability for any claim is limited to the amount you paid for the Software, if any.
+
+Nothing in this Agreement limits rights you have as a consumer that cannot be limited by contract under the law of the country where you live.
+
+11. Ending this agreement
+
+This Agreement lasts until it ends. It ends automatically if you break it. When it ends you must stop using the Software and delete your copies. Sections 3, 9, 10 and 12 continue after it ends.
+
+12. General
+
+This Agreement is governed by the laws of the country where the licensor resides, without prejudice to the mandatory rules that protect consumers where you live. If any part of this Agreement cannot be enforced, the rest stays in effect. This Agreement is the entire agreement between you and us about the Software.
+
+Kinora (c) 2026 Marios Kouretis. All rights reserved.

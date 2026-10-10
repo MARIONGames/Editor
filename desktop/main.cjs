@@ -137,6 +137,11 @@ app.on('second-instance', () => {
 
 app.whenReady().then(() => {
   protocol.handle(SCHEME, serve);
+  app.setAboutPanelOptions({
+    applicationName: 'Kinora',
+    applicationVersion: app.getVersion(),
+    copyright: '© 2026 Marios Kouretis. All rights reserved.',
+  });
 
   const ses = session.defaultSession;
   // Kinora needs no camera, microphone, location or notifications.

@@ -3,7 +3,9 @@ import { chooseFiles, exportedFile, openApp } from './helpers';
 
 test('edit a photo: auto-enhance, add text, export full-resolution PNG', async ({ page }) => {
   const errors = await openApp(page);
-  await chooseFiles(page, () => page.getByRole('button', { name: /Edit a photo/ }).click(), ['photo.jpg']);
+  await chooseFiles(page, () => page.getByRole('button', { name: /Edit a photo/ }).click(), [
+    'photo.jpg',
+  ]);
   // The photo decides the canvas size, and Adjust opens straight away.
   await expect(page.locator('[data-coach="auto-enhance"]')).toBeVisible();
   await page.locator('[data-coach="auto-enhance"]').click();

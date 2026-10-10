@@ -166,7 +166,7 @@ export async function listProjects(): Promise<ProjectSummary[]> {
 }
 
 /** Media files a stored 3D scene uses. */
-function sceneAssets(sc: StoredScene): string[] {
+export function sceneAssets(sc: StoredScene): string[] {
   const out = new Set(Object.keys(sc.assets ?? {}));
   for (const t of Object.values(sc.textures ?? {})) out.add(t.assetId);
   if (sc.world?.hdri) out.add(sc.world.hdri);
@@ -282,4 +282,58 @@ export async function storageEstimate(): Promise<{ usage: number; quota: number 
   } catch {
     return null;
   }
+}
+
+/* ------------------------------------------------------- cloud backup access */
+
+export type LocalKind = 'project' | 'scene';
+
+export interface LocalItem {
+  id: string;
+  kind: LocalKind;
+  name: string;
+  updatedAt: number;
+  /** Media files it uses. */
+  assets: string[];
+}
+
+const STORE: Record<LocalKind, string> = { project: 'projects', scene: 'scenes' };
+
+/** Every project and 3D scene on this device (for cloud backup). */
+export async function listLocal(): Promise<LocalItem[]> {
+  return tx(['projects', 'scenes'], 'readonly', async (t) => {
+    const ps = (await reqToPromise(t.objectStore('projects').getAll())) as Project[];
+    const ss = (await reqToPromise(t.objectStore('scenes').getAll())) as StoredScene[];
+    return [
+      ...ps.map((p) => ({
+        id: p.id,
+        kind: 'project' as const,
+        name: p.name,
+        updatedAt: p.updatedAt,
+        assets: Object.keys(p.assets ?? {}),
+      })),
+      ...ss.map((sc) => ({
+        id: sc.id,
+        kind: 'scene' as const,
+        name: sc.name,
+        updatedAt: sc.updatedAt,
+        assets: sceneAssets(sc),
+      })),
+    ];
+  });
+}
+
+export async function getLocal(kind: LocalKind, id: string): Promise<unknown | undefined> {
+  return tx(STORE[kind], 'readonly', (t) => reqToPromise(t.objectStore(STORE[kind]).get(id)));
+}
+
+export async function putLocal(kind: LocalKind, value: { id: string }): Promise<void> {
+  await tx(STORE[kind], 'readwrite', (t) => {
+    t.objectStore(STORE[kind]).put(value);
+  });
+}
+
+export async function deleteLocal(kind: LocalKind, id: string): Promise<void> {
+  if (kind === 'project') await deleteProject(id);
+  else await deleteScene(id);
 }

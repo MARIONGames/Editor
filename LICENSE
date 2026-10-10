@@ -1,0 +1,16 @@
+Kinora
+Copyright (c) 2026 Marios Kouretis. All rights reserved.
+
+This software and its source code, design, name and logo are the property of
+Marios Kouretis. No part of it may be copied, modified, distributed, sublicensed
+or sold without prior written permission from the copyright holder.
+
+Use of the Kinora apps is governed by the Kinora End User License Agreement,
+shown when the app is first used (source: src/legal/eula.ts; installer copy:
+build/eula.txt).
+
+Kinora includes open-source components that remain under their own licenses
+(MIT, ISC, MPL-2.0 and the SIL Open Font License). They are listed in
+THIRD-PARTY-NOTICES.md and in the app under Settings -> Third-party notices.
+Nothing in this notice limits the rights those licenses grant for those
+components.

@@ -313,7 +313,7 @@ function ExportDialog3D(props: { onClose: () => void }) {
             </button>
           </div>
           {kind !== 'model' && (
-            <div class="field">
+            <div class="export3d-field">
               <div class="field-label">
                 Size: {W} × {H}
               </div>
@@ -330,7 +330,7 @@ function ExportDialog3D(props: { onClose: () => void }) {
             </div>
           )}
           {kind === 'picture' && (
-            <div class="field">
+            <div class="export3d-field">
               <Segmented
                 value={format}
                 ariaLabel="Format"
@@ -347,7 +347,7 @@ function ExportDialog3D(props: { onClose: () => void }) {
           )}
           {kind === 'video' && (
             <>
-              <div class="field">
+              <div class="export3d-field">
                 <Segmented
                   value={vquality}
                   ariaLabel="Quality"
@@ -359,7 +359,7 @@ function ExportDialog3D(props: { onClose: () => void }) {
                   onChange={setVquality}
                 />
               </div>
-              <div class="field">
+              <div class="export3d-field">
                 <Segmented
                   value={vformat}
                   ariaLabel="Format"

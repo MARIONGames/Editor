@@ -10,6 +10,7 @@ import './styles/panels.css';
 import './styles/dialogs.css';
 import { App } from './app/App';
 import { initRouter } from './app/router';
+import { startSync } from './account/sync';
 
 function supported(): string | null {
   const c = document.createElement('canvas');
@@ -35,10 +36,17 @@ if (problem) {
   root.innerHTML = '';
   render(<App />, root);
   initRouter();
+  // Optional account: background backup when signed in (never blocks the app).
+  startSync();
 }
 
 // Only the web build works offline through a service worker (the artifact and desktop builds don't use one).
-if (import.meta.env.MODE === 'production' && 'serviceWorker' in navigator && window.isSecureContext && window.top === window) {
+if (
+  import.meta.env.MODE === 'production' &&
+  'serviceWorker' in navigator &&
+  window.isSecureContext &&
+  window.top === window
+) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => undefined);
   });

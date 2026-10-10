@@ -6,7 +6,11 @@ test('make a video: import, split, undo, title, export', async ({ page }) => {
   test.setTimeout(600_000);
   const errors = await openApp(page);
   await page.getByRole('button', { name: /Make a video/ }).click();
-  await chooseFiles(page, () => page.getByRole('button', { name: /Not sure — match my video/ }).click(), ['clip.webm', 'photo.jpg']);
+  await chooseFiles(
+    page,
+    () => page.getByRole('button', { name: /Not sure — match my video/ }).click(),
+    ['clip.webm', 'photo.jpg'],
+  );
   const mainClips = page.locator('.tl-lane.main .tl-clip');
   await expect(mainClips).toHaveCount(2, { timeout: 90_000 });
   await expect(page.locator('.time-total')).toHaveText('0:07.0');

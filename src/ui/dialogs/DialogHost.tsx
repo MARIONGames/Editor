@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'preact/hooks';
-import { Film, Monitor, RectangleVertical, Search, Smartphone, Square, Tv, Wand2 } from 'lucide-preact';
+import {
+  Film,
+  Monitor,
+  RectangleVertical,
+  Search,
+  Smartphone,
+  Square,
+  Tv,
+  Wand2,
+} from 'lucide-preact';
 import type { LucideIcon } from 'lucide-preact';
 import { CANVAS_PRESETS } from '../../model/defaults';
 import { GLOSSARY } from '../../i18n/glossary';
@@ -9,8 +18,12 @@ import { Dialog } from '../components/Dialog';
 import { Segmented, Switch } from '../components/Controls';
 import { SHORTCUTS } from '../editor/shortcuts';
 import { startTemplate } from '../home/flows';
-import { closeDialog, dialog } from './dialogState';
+import { closeDialog, dialog, openDialog } from './dialogState';
 import { ExportDialog } from './ExportDialog';
+import { AccountDialog } from './AccountDialog';
+import { COPYRIGHT } from '../../legal/eula';
+import { EulaText } from '../../legal/EulaGate';
+import { ISC_TEXT, MIT_TEXT, THIRD_PARTY } from '../../legal/notices';
 
 const ASPECT_ICONS: Record<string, LucideIcon> = {
   '16:9': Monitor,
@@ -29,6 +42,50 @@ export function DialogHost() {
       return <ExportDialog />;
     case 'glossary':
       return <GlossaryDialog initial={d.term} />;
+    case 'account':
+      return <AccountDialog mode={d.mode} resetToken={d.token} />;
+    case 'eula':
+      return (
+        <Dialog
+          title="License agreement"
+          subtitle={`Kinora ${COPYRIGHT}`}
+          onClose={closeDialog}
+          wide
+        >
+          <EulaText />
+        </Dialog>
+      );
+    case 'notices':
+      return (
+        <Dialog
+          title="Third-party notices"
+          subtitle="Open-source parts of Kinora and their licenses. Thank you to their authors."
+          onClose={closeDialog}
+          wide
+        >
+          <ul class="notices">
+            {THIRD_PARTY.map((n) => (
+              <li key={n.name}>
+                <strong>{n.name}</strong> <span class="faint">· {n.license}</span>
+                <br />
+                <span class="faint">{n.copyright}</span>
+              </li>
+            ))}
+          </ul>
+          <details class="notice-text">
+            <summary>MIT License</summary>
+            <pre>{MIT_TEXT}</pre>
+          </details>
+          <details class="notice-text">
+            <summary>ISC License</summary>
+            <pre>{ISC_TEXT}</pre>
+          </details>
+          <p class="faint">
+            Mozilla Public License 2.0: https://mozilla.org/MPL/2.0/ · SIL Open Font License 1.1:
+            https://openfontlicense.org
+          </p>
+        </Dialog>
+      );
     case 'shortcuts':
       return (
         <Dialog title="Keyboard shortcuts" onClose={closeDialog}>
@@ -55,7 +112,12 @@ export function DialogHost() {
       return <SettingsDialog />;
     case 'templates':
       return (
-        <Dialog title="Start from a template" subtitle="Pick a design, then choose your own photos or videos. Everything stays editable." onClose={closeDialog} wide>
+        <Dialog
+          title="Start from a template"
+          subtitle="Pick a design, then choose your own photos or videos. Everything stays editable."
+          onClose={closeDialog}
+          wide
+        >
           <div class="template-grid">
             {TEMPLATES.map((t) => (
               <button
@@ -72,7 +134,8 @@ export function DialogHost() {
                 <strong>{t.name}</strong>
                 <span class="faint">{t.description}</span>
                 <span class="badge">
-                  {t.kind === 'photo' ? 'Photo' : 'Video'} · {t.width > t.height ? 'Wide' : t.width === t.height ? 'Square' : 'Tall'}
+                  {t.kind === 'photo' ? 'Photo' : 'Video'} ·{' '}
+                  {t.width > t.height ? 'Wide' : t.width === t.height ? 'Square' : 'Tall'}
                 </span>
               </button>
             ))}
@@ -152,7 +215,12 @@ export function DialogHost() {
   }
 }
 
-function PromptDialog(props: { title: string; label: string; value: string; resolve: (v: string | null) => void }) {
+function PromptDialog(props: {
+  title: string;
+  label: string;
+  value: string;
+  resolve: (v: string | null) => void;
+}) {
   const [v, setV] = useState(props.value);
   const ok = () => {
     dialog.value = null;
@@ -175,7 +243,13 @@ function PromptDialog(props: { title: string; label: string; value: string; reso
     >
       <label class="field">
         <span class="field-label">{props.label}</span>
-        <input class="input" autoFocus value={v} onInput={(e) => setV((e.target as HTMLInputElement).value)} onKeyDown={(e) => e.key === 'Enter' && ok()} />
+        <input
+          class="input"
+          autoFocus
+          value={v}
+          onInput={(e) => setV((e.target as HTMLInputElement).value)}
+          onKeyDown={(e) => e.key === 'Enter' && ok()}
+        />
       </label>
     </Dialog>
   );
@@ -190,10 +264,21 @@ function GlossaryDialog({ initial }: { initial?: string }) {
       : GLOSSARY;
   }, [q]);
   return (
-    <Dialog title="Editing words, explained" subtitle="No jargon left behind. Search any word you’ve heard." onClose={closeDialog} wide>
+    <Dialog
+      title="Editing words, explained"
+      subtitle="No jargon left behind. Search any word you’ve heard."
+      onClose={closeDialog}
+      wide
+    >
       <label class="search">
         <Search size={18} />
-        <input class="input" placeholder="Search, e.g. “cut” or “transition”" value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} aria-label="Search the glossary" />
+        <input
+          class="input"
+          placeholder="Search, e.g. “cut” or “transition”"
+          value={q}
+          onInput={(e) => setQ((e.target as HTMLInputElement).value)}
+          aria-label="Search the glossary"
+        />
       </label>
       <dl class="glossary">
         {list.map((g) => (
@@ -230,15 +315,43 @@ function SettingsDialog() {
           ]}
         />
       </div>
-      <Switch label="Explain things" hint="Show what each button and slider does." checked={s.hints} onChange={(hints) => updateSettings({ hints })} />
-      <Switch label="Pro mode" hint="Show every slider and option right away (blend modes, all adjustments)." checked={s.pro} onChange={(pro) => updateSettings({ pro })} />
-      <Switch label="First-project checklist" hint="Show the step-by-step checklist in the editor." checked={!s.checklistHidden} onChange={(v) => updateSettings({ checklistHidden: !v })} />
+      <Switch
+        label="Explain things"
+        hint="Show what each button and slider does."
+        checked={s.hints}
+        onChange={(hints) => updateSettings({ hints })}
+      />
+      <Switch
+        label="Pro mode"
+        hint="Show every slider and option right away (blend modes, all adjustments)."
+        checked={s.pro}
+        onChange={(pro) => updateSettings({ pro })}
+      />
+      <Switch
+        label="First-project checklist"
+        hint="Show the step-by-step checklist in the editor."
+        checked={!s.checklistHidden}
+        onChange={(v) => updateSettings({ checklistHidden: !v })}
+      />
       <button class="btn small ghost" onClick={() => updateSettings({ tourDone: false })}>
         Show the welcome tour again
       </button>
       <p class="faint">
-        Kinora keeps everything on this device: your projects are saved in this browser and your files are never uploaded.
+        Kinora keeps everything on this device: your projects are saved here and your files are only
+        uploaded if you sign in and turn on cloud backup.
       </p>
+      <div class="about-block">
+        <strong>Kinora {__APP_VERSION__}</strong>
+        <span class="faint">{COPYRIGHT}</span>
+        <div class="row">
+          <button class="btn small ghost" onClick={() => openDialog({ type: 'eula' })}>
+            License agreement
+          </button>
+          <button class="btn small ghost" onClick={() => openDialog({ type: 'notices' })}>
+            Third-party notices
+          </button>
+        </div>
+      </div>
     </Dialog>
   );
 }

@@ -34,6 +34,7 @@ jobs:
         run: npm run desktop:dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          VITE_KINORA_API: ${{ vars.KINORA_API }}
       - name: Smoke test the packaged app
         shell: pwsh
         run: |

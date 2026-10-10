@@ -1,0 +1,40 @@
+// Kinora accounts & cloud backup — Cloudflare Worker configuration.
+// Step-by-step setup: see README.md in this folder.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kinora-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-20",
+  "observability": { "enabled": true },
+  // Daily clean-up of expired sessions and old sign-in attempts.
+  "triggers": { "crons": ["17 3 * * *"] },
+
+  // Accounts, sessions and the list of backed-up projects.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kinora",
+      // Replace with the id printed by `npx wrangler d1 create kinora`.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Backed-up project files and media (photos, videos, 3D models).
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "kinora-files" }],
+
+  "vars": {
+    // Web pages allowed to call the API (comma-separated). Add your own domain here.
+    // app://kinora is the Windows/desktop app.
+    "ALLOWED_ORIGINS": "https://mariongames.github.io,app://kinora,http://localhost:5173,http://localhost:4173",
+    // Cloud storage per account, in megabytes.
+    "QUOTA_MB": "2048",
+    // Where password-reset links point (the address people open Kinora at).
+    "APP_URL": "https://mariongames.github.io/Editor/",
+    // Sender for password-reset emails (needs RESEND_API_KEY, see README).
+    "MAIL_FROM": "Kinora <no-reply@example.com>"
+  }
+
+  // Custom domain (after you add your domain to Cloudflare), for example:
+  // "routes": [{ "pattern": "api.example.com", "custom_domain": true }]
+}

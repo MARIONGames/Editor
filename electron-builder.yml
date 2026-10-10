@@ -3,7 +3,7 @@
 #   release/Kinora-<version>-portable.exe  single file, runs without installing
 appId: app.kinora.editor
 productName: Kinora
-copyright: Copyright © Kinora
+copyright: Copyright © 2026 Marios Kouretis. All rights reserved.
 directories:
   output: release
 files:
@@ -20,6 +20,8 @@ win:
     - target: portable
       arch: [x64]
 nsis:
+  # The installer shows the license agreement and asks to accept it.
+  license: build/eula.txt
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true

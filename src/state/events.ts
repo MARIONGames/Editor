@@ -34,6 +34,8 @@ export interface AppEvents {
   '3d:keyed': { how: string };
   '3d:played': Record<string, never>;
   '3d:rendered': { kind: 'image' | 'video' | 'model' };
+  /** Cloud sync added, changed or removed projects on this device. */
+  'sync:changed': { count: number };
 }
 
 type Handler<K extends keyof AppEvents> = (payload: AppEvents[K]) => void;

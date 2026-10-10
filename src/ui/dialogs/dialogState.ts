@@ -8,6 +8,9 @@ export type DialogState =
   | { type: 'glossary'; term?: string }
   | { type: 'shortcuts' }
   | { type: 'settings' }
+  | { type: 'eula' }
+  | { type: 'account'; mode?: 'signin' | 'signup' | 'forgot' | 'reset'; token?: string }
+  | { type: 'notices' }
   | { type: 'templates' }
   | {
       type: 'aspect';

@@ -34,6 +34,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # Account service address (Settings → Secrets and variables → Actions → Variables).
+          # Empty = accounts hidden; everything else works the same.
+          VITE_KINORA_API: ${{ vars.KINORA_API }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

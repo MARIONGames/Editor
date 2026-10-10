@@ -92,6 +92,18 @@ Build it yourself on Windows with `npm run desktop:dist` (output in `release/`),
 or try it on any OS with `npm run desktop`. The shell lives in `desktop/main.cjs`
 and the packaging settings in `electron-builder.yml`.
 
+## Accounts & cloud backup (optional)
+
+Kinora works fully without an account, offline included. With the optional account,
+projects (photo, video and 3D) are backed up and appear on your other devices. The app
+always saves on the device first and syncs in the background when online. If a project
+changed on two devices, both versions are kept.
+
+The backend is a Cloudflare Worker with D1 and R2 in [`server/`](server/). Its
+[README](server/README.md) has step-by-step setup instructions. Point the app at it with
+`VITE_KINORA_API` (see `.env.example`, or the `KINORA_API` repository variable for the
+GitHub builds). Without it, accounts are hidden.
+
 ## Browser support
 
 Chrome / Edge 94+, Safari 16.4+, Firefox 130+ on desktop; Chrome on Android;
@@ -114,8 +126,12 @@ src/
   magic/     auto-enhance, silence removal, beat detection
   coach/     tour, checklist, next-step suggestions
   ui/        home screen, editor, timeline, panels, dialogs
+  studio3d/  the 3D studio (model, engine, state, UI, import/export)
+  account/   optional sign-in and offline-first cloud sync
+  legal/     license agreement, copyright and third-party notices
   i18n/      every tool name/explanation and the glossary
 desktop/     Electron shell for the Windows/macOS/Linux app
+server/      optional accounts & cloud backup (Cloudflare Worker + D1 + R2)
 tests/       unit (Vitest) and end-to-end (Playwright) tests
 docs/        product, architecture and plan
 ```
@@ -125,4 +141,10 @@ docs/        product, architecture and plan
 Bundled fonts are under the SIL Open Font License — see
 [src/assets/fonts/LICENSE.md](src/assets/fonts/LICENSE.md). Video muxing and
 decoding use [mediabunny](https://mediabunny.dev) (MPL-2.0); icons are
-[Lucide](https://lucide.dev) (ISC).
+[Lucide](https://lucide.dev) (ISC); 3D uses [three.js](https://threejs.org) (MIT).
+All open-source parts are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+## License
+
+Kinora © 2026 Marios Kouretis. All rights reserved. See [LICENSE](LICENSE). Using the
+apps requires accepting the End User License Agreement, which Kinora shows on first use.

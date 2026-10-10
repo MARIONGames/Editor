@@ -6,6 +6,7 @@ import { Editor } from '../ui/editor/Editor';
 import { Toasts, BusyOverlay } from '../ui/components/Toasts';
 import { DialogHost } from '../ui/dialogs/DialogHost';
 import { CoachLayer } from '../coach/CoachLayer';
+import { EulaGate } from '../legal/EulaGate';
 
 export function App() {
   const theme = settings.value.theme;
@@ -41,6 +42,7 @@ export function App() {
       <CoachLayer />
       <BusyOverlay />
       <Toasts />
+      <EulaGate />
     </>
   );
 }

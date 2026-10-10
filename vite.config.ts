@@ -1,6 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { artifactPlugins } from './build/artifact-plugin.ts';
 import { pwaPlugin } from './build/pwa-plugin.ts';
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
+const BANNER = `/*! Kinora ${pkg.version} — © 2026 Marios Kouretis. All rights reserved. Third-party notices: Settings → Third-party notices. */`;
 
 export default defineConfig(({ mode }) => {
   // `vite build --mode artifact` makes a demo for a sandboxed host page (see build/artifact-plugin.ts):
@@ -11,6 +15,7 @@ export default defineConfig(({ mode }) => {
   return {
     // Relative base so the static build works from any sub-path (GitHub Pages, file hosting).
     base: './',
+    define: { __APP_VERSION__: JSON.stringify(pkg.version) },
     publicDir: artifact ? false : 'public',
     oxc: {
       jsx: { runtime: 'automatic', importSource: 'preact' },
@@ -23,6 +28,7 @@ export default defineConfig(({ mode }) => {
       cssMinify: true,
       outDir: artifact ? 'dist-artifact' : desktop ? 'dist-desktop' : 'dist',
       chunkSizeWarningLimit: 900,
+      rolldownOptions: { output: { postBanner: BANNER } },
     },
     server: {
       host: true,

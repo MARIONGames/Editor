@@ -5,6 +5,7 @@
 import { effect } from '@preact/signals';
 import { closeProject, openProject } from '../state/actions';
 import { route, type Route } from '../state/store';
+import { openDialog } from '../ui/dialogs/dialogState';
 
 /** The 3D studio (and three.js) load only when a 3D scene is opened. */
 const load3d = () => import('../studio3d/state/actions3d');
@@ -36,6 +37,12 @@ function hashOf(r: Route): string {
 }
 
 export function initRouter(): void {
+  // Password-reset links from the account email: #/reset/<token>
+  const reset = /^#\/reset\/([\w-]{10,200})$/.exec(location.hash);
+  if (reset) {
+    safeHistory('replace', '#/');
+    openDialog({ type: 'account', mode: 'reset', token: reset[1]! });
+  }
   const initial = parse(location.hash);
   if (initial.name === 'editor')
     void openProject(initial.projectId).then((ok) => !ok && safeHistory('replace', '#/'));

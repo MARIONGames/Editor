@@ -378,3 +378,325 @@
   justify-content: flex-end;
   margin-top: 4px;
 }
+
+/* ------------------------------------------------------- license agreement */
+
+.eula-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: max(16px, var(--safe-top)) 16px max(16px, var(--safe-bottom));
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.eula-card {
+  width: min(680px, 100%);
+  max-height: calc(100dvh - 32px - var(--safe-top) - var(--safe-bottom));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  border-radius: var(--radius-l);
+  background: var(--bg-elev);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+  animation: pop-in 0.2s var(--ease);
+}
+
+.eula-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.eula-head h2 {
+  font-size: 21px;
+}
+
+.eula-scroll {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.eula-doc-title {
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+.eula-text {
+  display: grid;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.eula-text h3 {
+  font-size: 14.5px;
+  margin-bottom: 4px;
+}
+
+.eula-text p + p {
+  margin-top: 6px;
+}
+
+.eula-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.eula-check input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 1px;
+  accent-color: var(--accent);
+}
+
+.eula-hint {
+  font-size: 12.5px;
+  margin-top: -6px;
+}
+
+.eula-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.eula-declined {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+  padding: 8px 0;
+}
+
+.eula-copy {
+  font-size: 12px;
+  text-align: center;
+}
+
+.about-block {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.about-block .row {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.notices {
+  display: grid;
+  gap: 10px;
+  padding-left: 18px;
+  font-size: 13.5px;
+}
+
+.notice-text {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.notice-text summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.notice-text pre {
+  white-space: pre-wrap;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* ---------------------------------------------------------------- account */
+
+.account-form {
+  display: grid;
+  gap: 12px;
+}
+
+.account-form .field {
+  margin: 0;
+}
+
+.account-form small {
+  font-size: 12px;
+}
+
+.account-legal {
+  font-size: 12.5px;
+}
+
+.account-error {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(248, 113, 113, 0.14);
+  color: var(--danger);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.account-switch {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13.5px;
+}
+
+.account-sent {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+
+.account-view {
+  display: grid;
+  gap: 14px;
+}
+
+.account-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.account-card .grow {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.account-avatar {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gradient);
+  color: #fff;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.account-avatar.small {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.sync-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.sync-line.status-error,
+.sync-line.status-full {
+  color: var(--warning);
+}
+
+.usage {
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.usage-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.usage-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.danger-zone {
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--danger);
+  font-size: 13.5px;
+}
+
+.danger-link {
+  justify-self: start;
+  color: var(--danger);
+}
+
+.account-chip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.account-chip:hover {
+  background: var(--surface-2);
+}
+
+.account-dot {
+  position: absolute;
+  right: 3px;
+  bottom: 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--success);
+}
+
+.account-chip.status-syncing .account-dot {
+  background: var(--accent);
+  animation: fade-in 0.8s ease-in-out infinite alternate;
+}
+
+.account-chip.status-offline .account-dot {
+  background: var(--text-faint);
+}
+
+.account-chip.status-error .account-dot,
+.account-chip.status-full .account-dot {
+  background: var(--warning);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
